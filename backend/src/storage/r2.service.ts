@@ -20,13 +20,11 @@ export class R2Service {
     this.bucket = process.env.R2_BUCKET || 'batikchain'
   }
 
-  async upload(buffer: Buffer, folder: string, ext: string): Promise<string> {
+  async upload(buffer: Buffer, folder: string, ext: string, mimeType?: string): Promise<string> {
     const key = `${folder}/${crypto.randomUUID()}${ext}`
-    await this.client.send(new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      Body: buffer,
-    }))
+    const command: any = { Bucket: this.bucket, Key: key, Body: buffer }
+    if (mimeType) command.ContentType = mimeType
+    await this.client.send(new PutObjectCommand(command))
     return `${process.env.R2_ENDPOINT}/${this.bucket}/${key}`
   }
 

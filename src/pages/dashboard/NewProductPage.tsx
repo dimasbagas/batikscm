@@ -25,9 +25,20 @@ export default function NewProductPage() {
     return Object.keys(e).length === 0
   }
 
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+  const MAX_SIZE = 5 * 1024 * 1024
+
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     if (!f) return
+    if (!ALLOWED_TYPES.includes(f.type)) {
+      setErrors(prev => ({ ...prev, imageUrl: 'Format file harus JPG, PNG, atau WebP' }))
+      return
+    }
+    if (f.size > MAX_SIZE) {
+      setErrors(prev => ({ ...prev, imageUrl: 'Ukuran file maksimal 5MB' }))
+      return
+    }
     setFile(f)
     setErrors(prev => ({ ...prev, imageUrl: '' }))
     const reader = new FileReader()

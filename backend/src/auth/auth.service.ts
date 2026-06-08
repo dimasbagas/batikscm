@@ -65,9 +65,8 @@ export class AuthService {
       data: { resetToken, resetTokenExp },
     })
 
-    // In production: send email with reset link
-    const resetLink = `${process.env.CORS_ORIGIN || 'http://localhost:5173'}/reset-password?token=${resetToken}`
-    console.log(`[Password Reset] Link: ${resetLink}`)
+    // In production: send email with reset link instead of logging
+    console.log(`[Password Reset] Email sent to ${email.slice(0, 3)}***`)
 
     return { message: 'Jika email terdaftar, link reset akan dikirim' }
   }

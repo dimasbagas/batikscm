@@ -11,6 +11,7 @@ import CertificatesPage from './pages/dashboard/CertificatesPage'
 import SettingsPage from './pages/dashboard/SettingsPage'
 import VerifyPage from './pages/VerifyPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import RequireRole from './components/auth/RequireRole'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import UsersPage from './pages/admin/UsersPage'
 import AdminProductsPage from './pages/admin/AdminProductsPage'
@@ -31,9 +32,9 @@ export default function App() {
             <Route path="products/new" element={<NewProductPage />} />
             <Route path="certificates" element={<CertificatesPage />} />
             <Route path="settings" element={<SettingsPage />} />
-            <Route path="admin" element={<AdminDashboardPage />} />
-            <Route path="admin/users" element={<UsersPage />} />
-            <Route path="admin/products" element={<AdminProductsPage />} />
+            <Route path="admin" element={<RequireRole role="admin"><AdminDashboardPage /></RequireRole>} />
+            <Route path="admin/users" element={<RequireRole role="admin"><UsersPage /></RequireRole>} />
+            <Route path="admin/products" element={<RequireRole role="admin"><AdminProductsPage /></RequireRole>} />
           </Route>
         </Routes>
       </AuthProvider>

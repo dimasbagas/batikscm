@@ -21,7 +21,7 @@ import { StorageModule } from './storage/storage.module'
   ],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
     BullModule.forRoot({
       connection: { host: process.env.REDIS_HOST || 'localhost', port: Number(process.env.REDIS_PORT) || 6379 },
     }),

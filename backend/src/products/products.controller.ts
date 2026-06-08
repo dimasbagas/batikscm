@@ -22,7 +22,9 @@ export class ProductsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get product by ID or tokenId' })
   async findOne(@Param('id') id: string) {
-    try { return await this.products.findOne(id) } catch {}
+    try { return await this.products.findOne(id) } catch (e: any) {
+      if (e.status !== 404) throw e
+    }
     return this.products.findByTokenId(id)
   }
 
@@ -68,7 +70,7 @@ export class ProductsController {
     file: Express.Multer.File,
   ) {
     const ext = file.originalname.match(/\.\w+$/)?.[0] || '.jpg'
-    const url = await this.r2.upload(file.buffer, 'products', ext)
+    const url = await this.r2.upload(file.buffer, 'products', ext, file.mimetype)
     return { url }
   }
 }

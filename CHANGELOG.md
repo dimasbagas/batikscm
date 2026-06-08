@@ -40,6 +40,26 @@
 - Nginx: added security headers, gzip, caching, rate limiting
 - Docker Compose: added Redis service, container names, healthchecks
 
+## [1.3.0] - 2026-06-08
+
+### Security (HIGH)
+- **JWT secret validation**: startup crash if JWT_SECRET not set or uses default value
+- **Google OAuth token leak**: tokens now set as httpOnly cookies instead of URL params
+- **Authorization fix**: UsersController requires ADMIN/VERIFICATOR for listing, ownership check for update
+- **Certificate minting**: restricted to ADMIN/VERIFICATOR role only
+- **Swagger docs**: disabled in production (NODE_ENV=production)
+- **CSP enabled**: strict Content Security Policy via Helmet
+- **Rate limiting**: per-endpoint limits on auth (login: 5/min, register/forgot: 3/min)
+- **`.env` added to `.gitignore`**: prevents secret leakage to version control
+- **File upload**: Content-Type set on R2 objects, magic byte via ParseFilePipe
+
+### Security (MEDIUM)
+- **Password policy**: minimum 8 chars + uppercase + lowercase + number
+- **Reset token logging**: masked email instead of full reset link
+- **Source maps**: disabled in production Vite build
+- **Admin routes**: client-side `<RequireRole role="admin">` wrapper
+- **Product controller**: non-404 errors no longer swallowed
+
 ## [1.2.1] - 2026-06-08
 
 ### Fixed

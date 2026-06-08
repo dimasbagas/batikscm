@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Req, UseGuards, HttpCode, HttpStatus, Res } from '@nestjs/common'
 import { ApiTags, ApiOperation } from '@nestjs/swagger'
 import { AuthGuard } from '@nestjs/passport'
+import { Throttle } from '@nestjs/throttler'
 import { Response } from 'express'
 import { AuthService } from './auth.service'
 import { RegisterDto, LoginDto } from './dto/register.dto'
@@ -12,12 +13,14 @@ export class AuthController {
   constructor(private auth: AuthService) {}
 
   @Post('register')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @ApiOperation({ summary: 'Register UMKM user' })
   async register(@Body() dto: RegisterDto) {
     return this.auth.register(dto)
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login user' })
   async login(@Body() dto: LoginDto) {
@@ -25,6 +28,7 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request password reset' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -32,6 +36,7 @@ export class AuthController {
   }
 
   @Post('reset-password')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reset password with token' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
@@ -49,6 +54,8 @@ export class AuthController {
   async googleCallback(@Req() req: any, @Res() res: Response) {
     const result = await this.auth.googleLogin(req.user)
     const FRONTEND_URL = process.env.CORS_ORIGIN || 'http://localhost:5173'
-    res.redirect(`${FRONTEND_URL}/login?token=${result.accessToken}&refresh=${result.refreshToken}`)
+    res.cookie('auth_token', result.accessToken, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 15 * 60 * 1000 })
+    res.cookie('refresh_token', result.refreshToken, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 })
+    res.redirect(FRONTEND_URL)
   }
 }
