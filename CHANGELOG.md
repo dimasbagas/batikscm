@@ -47,5 +47,11 @@
   - CertificateQueueService: addMintJob with retry (3 attempts, exponential backoff)
   - CertificateProcessor: WorkerHost processing mint jobs
   - POST /certificates/mint returns 202 Accepted with jobId
+- **Cloudflare R2 storage**: S3-compatible file upload
+  - R2Service: upload to products folder, getSignedUrl
+  - POST /products/upload with 5MB max, jpeg/png/webp validation
+- **Rate limiting**: 60 requests/minute global via @nestjs/throttler
+- **Helmet security headers**: CSP, XSS, frameguard, etc.
+- **CI/CD**: GitHub Actions workflows (CI build+test, CD deploy via SSH)
 - **Health endpoint**: GET /api/v1/health for Docker healthcheck
 - **Backend .env**: Redis, JWT refresh secret, R2 env vars with defaults
