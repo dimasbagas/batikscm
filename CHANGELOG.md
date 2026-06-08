@@ -40,6 +40,17 @@
 - Nginx: added security headers, gzip, caching, rate limiting
 - Docker Compose: added Redis service, container names, healthchecks
 
+## [1.2.0] - 2026-06-08
+
+### Added
+- **Google OAuth login**: passport-google-oauth20 strategy, auto-create user
+  - GET /auth/google and /auth/google/callback
+  - "Masuk dengan Google" button on LoginPage
+- **Password reset**: forgot-password + reset-password endpoints
+  - crypto token generation, 1-hour expiry, Argon2 re-hashing
+  - ForgotPasswordPage UI at /forgot-password
+- **User schema**: added resetToken and resetTokenExp fields
+
 ## [1.1.0] - 2026-06-08
 
 ### Added

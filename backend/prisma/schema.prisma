@@ -31,8 +31,10 @@ model User {
   city      String?
   province  String?
   nik       String?
-  avatar    String?
-  isActive  Boolean  @default(true)
+  avatar        String?
+  resetToken    String?
+  resetTokenExp DateTime?
+  isActive      Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

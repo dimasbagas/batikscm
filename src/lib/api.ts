@@ -131,6 +131,10 @@ export async function updateUser(id: string, data: Partial<UserType>): Promise<v
   await http.patch(`/users/${id}`, data)
 }
 
+export async function forgotPassword(email: string): Promise<void> {
+  await http.post('/auth/forgot-password', { email })
+}
+
 function mapProduct(d: any): Product {
   return {
     id: d.id ?? '',

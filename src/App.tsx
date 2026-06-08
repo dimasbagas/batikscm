@@ -10,6 +10,7 @@ import NewProductPage from './pages/dashboard/NewProductPage'
 import CertificatesPage from './pages/dashboard/CertificatesPage'
 import SettingsPage from './pages/dashboard/SettingsPage'
 import VerifyPage from './pages/VerifyPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import UsersPage from './pages/admin/UsersPage'
 import AdminProductsPage from './pages/admin/AdminProductsPage'
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/verify/:productId" element={<VerifyPage />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardPage />} />
