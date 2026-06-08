@@ -39,3 +39,13 @@
 - Backend .env SQLite URL → PostgreSQL env var substitution
 - Nginx: added security headers, gzip, caching, rate limiting
 - Docker Compose: added Redis service, container names, healthchecks
+
+## [1.1.0] - 2026-06-08
+
+### Added
+- **BullMQ queue system**: async certificate minting via Redis queue
+  - CertificateQueueService: addMintJob with retry (3 attempts, exponential backoff)
+  - CertificateProcessor: WorkerHost processing mint jobs
+  - POST /certificates/mint returns 202 Accepted with jobId
+- **Health endpoint**: GET /api/v1/health for Docker healthcheck
+- **Backend .env**: Redis, JWT refresh secret, R2 env vars with defaults

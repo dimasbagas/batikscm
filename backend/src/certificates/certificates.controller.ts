@@ -3,11 +3,12 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { AuthGuard } from '@nestjs/passport'
 import { Response } from 'express'
 import { CertificatesService } from './certificates.service'
+import { CertificateQueueService } from '../queues/certificate-queue.service'
 
 @ApiTags('Certificates')
 @Controller('certificates')
 export class CertificatesController {
-  constructor(private certs: CertificatesService) {}
+  constructor(private certs: CertificatesService, private certQueue: CertificateQueueService) {}
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
@@ -26,10 +27,11 @@ export class CertificatesController {
   @Post('mint/:productId')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Mint certificate for product' })
-  mint(@Param('productId') productId: string, @Req() req: any) {
-    return this.certs.mint(productId, req.user.id)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({ summary: 'Queue certificate minting' })
+  async mint(@Param('productId') productId: string, @Req() req: any) {
+    const job = await this.certQueue.addMintJob(productId, req.user.id)
+    return { message: 'Minting queued', jobId: job.id }
   }
 
   @Get(':id/qr')
