@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  VISITOR
+  UMKM
+  VERIFICATOR
+  ADMIN
+}
+
+enum ProductStatus {
+  REGISTERED
+  VERIFIED
+  REJECTED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(UMKM)
+  umkmName  String?
+  phone     String?
+  city      String?
+  province  String?
+  nik       String?
+  avatar    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products           Product[]
+  certificates       Certificate[]
+  ownedFromProducts  OwnershipHistory[] @relation("OwnerFrom")
+  ownedToProducts    OwnershipHistory[] @relation("OwnerTo")
+  auditLogs          AuditLog[]
+  notifications Notification[]
+}
+
+model Product {
+  id              String        @id @default(cuid())
+  tokenId         String        @unique
+  productName     String
+  batikName       String?
+  category        String?
+  motif           String?
+  originLocation  String
+  producerName    String?
+  description     String?
+  productionDate  DateTime
+  price           Float?
+  stock           Int?
+  imageUrl        String
+  detailImageUrl  String?
+  metadataHash    String
+  certificationDate DateTime?   @default(now())
+  status          ProductStatus @default(REGISTERED)
+  certificateId   String?
+  contractAddress String?
+  transactionHash String?
+  producerId      String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  producer          User              @relation(fields: [producerId], references: [id])
+  certificate       Certificate?
+  verificationLogs  VerificationLog[]
+  ownershipHistory  OwnershipHistory[]
+  productImages     ProductImage[]
+}
+
+model ProductImage {
+  id        String @id @default(cuid())
+  url       String
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Certificate {
+  id              String   @id @default(cuid())
+  tokenId         String   @unique
+  productId       String   @unique
+  productName     String
+  producerName    String
+  originLocation  String
+  productionDate  DateTime
+  certificationDate DateTime @default(now())
+  metadataHash    String
+  imageUrl        String
+  qrValue         String
+  nftTokenId      String?
+  contractAddress String?
+  issuerId        String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+  issuer  User    @relation(fields: [issuerId], references: [id])
+}
+
+model VerificationLog {
+  id        String   @id @default(cuid())
+  tokenId   String
+  hashInput String
+  isValid   Boolean
+  message   String
+  verifierIp String?
+  productId String
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model OwnershipHistory {
+  id        String   @id @default(cuid())
+  productId String
+  fromId    String?
+  toId      String
+  action    String
+  createdAt DateTime @default(now())
+
+  product Product    @relation(fields: [productId], references: [id])
+  from    User?      @relation("OwnerFrom", fields: [fromId], references: [id])
+  to      User       @relation("OwnerTo", fields: [toId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
