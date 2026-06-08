@@ -40,6 +40,19 @@
 - Nginx: added security headers, gzip, caching, rate limiting
 - Docker Compose: added Redis service, container names, healthchecks
 
+## [1.2.1] - 2026-06-08
+
+### Fixed
+- **Bug: product status always 'rejected'**: mapProduct mapped 'CERTIFIED' instead of 'VERIFIED'
+- **Bug: Google OAuth token key mismatch**: LoginPage used 'token' instead of 'auth_token' in localStorage
+- **Bug: hardcoded API URL**: http.ts baseURL now uses VITE_API_URL env var
+- **Bug: VerifyPage can't find by tokenId**: products controller now falls back to findByTokenId
+- **Bug: tautology in verification service**: simplified `isValid || !isValid` to remove redundant check
+- **Bug: 401 redirect on public pages**: http interceptor skips redirect for /verify, /login, etc.
+- **Bug: data URL stored instead of R2 URL**: NewProductPage now uploads to R2 first before submit
+- **Bug: mintCertificate API mismatch**: updated to handle 202 queue response (returns jobId)
+- **TypeScript config**: added tsconfig.json for frontend with skipLibCheck
+
 ## [1.2.0] - 2026-06-08
 
 ### Added

@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const http = axios.create({
-  baseURL: 'http://localhost:3000/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1',
   timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 })
@@ -12,10 +12,12 @@ http.interceptors.request.use((config) => {
   return config
 })
 
+const publicPages = ['/verify', '/login', '/register', '/forgot-password']
+
 http.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    if (err.response?.status === 401 && !publicPages.some(p => window.location.pathname.startsWith(p))) {
       localStorage.removeItem('auth_token')
       localStorage.removeItem('user')
       window.location.href = '/login'

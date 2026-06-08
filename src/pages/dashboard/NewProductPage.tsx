@@ -2,13 +2,15 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Upload, Shield } from 'lucide-react'
 import { registerProduct } from '../../lib/api'
+import http from '../../lib/http'
 
 export default function NewProductPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({
     productName: '', producerName: '', originLocation: '', productionDate: '', imageUrl: '',
   })
-  const [fileName, setFileName] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState('')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -18,21 +20,28 @@ export default function NewProductPage() {
     if (!form.producerName.trim()) e.producerName = 'Nama produsen wajib diisi'
     if (!form.originLocation.trim()) e.originLocation = 'Asal daerah wajib diisi'
     if (!form.productionDate) e.productionDate = 'Tanggal produksi wajib diisi'
-    if (!form.imageUrl) e.imageUrl = 'Gambar produk wajib diupload'
+    if (!file && !form.imageUrl) e.imageUrl = 'Gambar produk wajib diupload'
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setFileName(file.name)
+    const f = e.target.files?.[0]
+    if (!f) return
+    setFile(f)
+    setErrors(prev => ({ ...prev, imageUrl: '' }))
     const reader = new FileReader()
-    reader.onload = ev => {
-      setForm(prev => ({ ...prev, imageUrl: ev.target?.result as string || '' }))
-      setErrors(prev => ({ ...prev, imageUrl: '' }))
-    }
-    reader.readAsDataURL(file)
+    reader.onload = ev => setPreview(ev.target?.result as string || '')
+    reader.readAsDataURL(f)
+  }
+
+  async function uploadFile(): Promise<string> {
+    if (form.imageUrl && !file) return form.imageUrl
+    if (!file) return ''
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await http.post('/products/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return res.data.url
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -40,7 +49,8 @@ export default function NewProductPage() {
     if (!validate()) return
     setLoading(true)
     try {
-      await registerProduct(form)
+      const imageUrl = await uploadFile()
+      await registerProduct({ ...form, imageUrl })
       navigate('/dashboard/products')
     } catch {
       setErrors({ productName: 'Gagal menyimpan produk. Coba lagi.' })
@@ -101,8 +111,8 @@ export default function NewProductPage() {
                 errors.imageUrl ? 'border-red-400 bg-red-50' : 'border-dashed border-batik-300 bg-batik-50 hover:bg-batik-100'
               }`} onClick={() => document.getElementById('file-upload')?.click()}>
                 <Upload className="w-6 h-6 text-batik-400 flex-shrink-0" />
-                <span className={`text-sm ${fileName ? 'text-batik-900 font-medium' : 'text-batik-400'}`}>
-                  {fileName || 'Klik untuk upload gambar...'}
+                <span className={`text-sm ${file ? 'text-batik-900 font-medium' : 'text-batik-400'}`}>
+                  {file?.name || 'Klik untuk upload gambar...'}
                 </span>
               </div>
               <input id="file-upload" type="file" accept="image/*" onChange={handleFile} className="hidden" />
@@ -110,16 +120,16 @@ export default function NewProductPage() {
             </div>
           </div>
 
-          {form.imageUrl && (
+          {preview && (
             <div className="flex justify-center">
-              <img src={form.imageUrl} alt="Preview" className="w-28 h-28 object-cover rounded-xl border-2 border-batik-200" />
+              <img src={preview} alt="Preview" className="w-28 h-28 object-cover rounded-xl border-2 border-batik-200" />
             </div>
           )}
 
           <div className="flex justify-end pt-2">
             <button type="submit" disabled={loading}
               className="px-8 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-batik-700 to-batik-800 hover:from-batik-800 hover:to-batik-900 disabled:opacity-60 transition-all">
-              {loading ? 'Mendaftarkan...' : 'Register & Generate QR Code'}
+              {loading ? 'Mengupload & Mendaftarkan...' : 'Register & Generate QR Code'}
             </button>
           </div>
         </div>

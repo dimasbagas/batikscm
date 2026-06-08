@@ -20,9 +20,10 @@ export class ProductsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get product by ID' })
-  findOne(@Param('id') id: string) {
-    return this.products.findOne(id)
+  @ApiOperation({ summary: 'Get product by ID or tokenId' })
+  async findOne(@Param('id') id: string) {
+    try { return await this.products.findOne(id) } catch {}
+    return this.products.findByTokenId(id)
   }
 
   @Post()

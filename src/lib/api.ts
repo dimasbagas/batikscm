@@ -72,21 +72,30 @@ export async function getCertificate(productId: string): Promise<Certificate | n
   }
 }
 
-export async function mintCertificate(productId: string): Promise<Certificate> {
+export async function mintCertificate(productId: string): Promise<{ jobId: string }> {
   const res = await http.post(`/certificates/mint/${productId}`)
-  const d = res.data
-  return {
-    id: d.id,
-    tokenId: d.tokenId ?? '',
-    productId: d.productId ?? productId,
-    productName: d.productName ?? '',
-    producerName: d.producerName ?? '',
-    originLocation: d.originLocation ?? '',
-    productionDate: d.productionDate ?? '',
-    certificationDate: d.mintedAt ?? new Date().toISOString(),
-    metadataHash: d.metadataHash ?? '',
-    imageUrl: d.imageUrl ?? '',
-    qrValue: JSON.stringify({ tokenId: d.tokenId, hash: d.metadataHash }),
+  return { jobId: res.data.jobId }
+}
+
+export async function getCertificateByProduct(productId: string): Promise<Certificate | null> {
+  try {
+    const res = await http.get(`/certificates/${productId}`)
+    const d = res.data
+    return {
+      id: d.id,
+      tokenId: d.tokenId ?? '',
+      productId: d.productId ?? productId,
+      productName: d.productName ?? '',
+      producerName: d.producerName ?? '',
+      originLocation: d.originLocation ?? '',
+      productionDate: d.productionDate ?? '',
+      certificationDate: d.certificationDate ?? '',
+      metadataHash: d.metadataHash ?? '',
+      imageUrl: d.imageUrl ?? '',
+      qrValue: JSON.stringify({ tokenId: d.tokenId, hash: d.metadataHash }),
+    }
+  } catch {
+    return null
   }
 }
 
@@ -147,6 +156,6 @@ function mapProduct(d: any): Product {
     metadataHash: d.metadataHash ?? '',
     certificationDate: d.certificationDate ? new Date(d.certificationDate).toISOString().split('T')[0] : '',
     producerId: d.producerId ?? d.producer?.id ?? '',
-    status: d.status === 'CERTIFIED' ? 'verified' : d.status === 'REGISTERED' ? 'registered' : 'rejected',
+    status: d.status === 'VERIFIED' ? 'verified' : d.status === 'REGISTERED' ? 'registered' : 'rejected',
   }
 }

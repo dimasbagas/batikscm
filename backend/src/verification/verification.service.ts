@@ -27,7 +27,7 @@ export class VerificationService {
     return {
       valid: isValid,
       message: isValid ? 'Produk Asli — Terverifikasi di Blockchain' : 'Produk Tidak Terverifikasi atau Diduga Palsu',
-      product: isValid || !isValid ? {
+      product: {
         id: product.id,
         tokenId: product.tokenId,
         productName: product.productName,
@@ -38,7 +38,7 @@ export class VerificationService {
         metadataHash: product.metadataHash,
         certificationDate: product.certificationDate,
         status: product.status,
-      } : undefined,
+      },
       timestamp: new Date().toISOString(),
     }
   }

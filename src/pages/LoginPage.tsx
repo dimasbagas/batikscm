@@ -16,8 +16,8 @@ export default function LoginPage() {
     const token = searchParams.get('token')
     const refresh = searchParams.get('refresh')
     if (token) {
-      localStorage.setItem('token', token)
-      if (refresh) localStorage.setItem('refreshToken', refresh)
+      localStorage.setItem('auth_token', token)
+      if (refresh) localStorage.setItem('refresh_token', refresh)
       navigate('/dashboard', { replace: true })
     }
   }, [])
