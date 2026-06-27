@@ -144,7 +144,13 @@ export async function forgotPassword(email: string): Promise<void> {
   await http.post('/auth/forgot-password', { email })
 }
 
+export async function recordCertificate(productId: string, onChainTokenId: number, transactionHash: string): Promise<any> {
+  const res = await http.post(`/certificates/record/${productId}`, { onChainTokenId, transactionHash })
+  return res.data
+}
+
 function mapProduct(d: any): Product {
+  const certDate = d.certificationDate || d.certificate?.certificationDate || d.certificate?.createdAt;
   return {
     id: d.id ?? '',
     tokenId: d.tokenId ?? '',
@@ -154,8 +160,10 @@ function mapProduct(d: any): Product {
     productionDate: d.productionDate ? new Date(d.productionDate).toISOString().split('T')[0] : '',
     imageUrl: d.imageUrl ?? '',
     metadataHash: d.metadataHash ?? '',
-    certificationDate: d.certificationDate ? new Date(d.certificationDate).toISOString().split('T')[0] : '',
+    certificationDate: certDate ? new Date(certDate).toISOString().split('T')[0] : '',
     producerId: d.producerId ?? d.producer?.id ?? '',
     status: d.status === 'VERIFIED' ? 'verified' : d.status === 'REGISTERED' ? 'registered' : 'rejected',
+    contractAddress: d.contractAddress ?? d.certificate?.contractAddress ?? '',
+    transactionHash: d.transactionHash ?? '',
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, UseGuards, Req, Res, HttpCode, HttpStatus } from '@nestjs/common'
+import { Controller, Get, Post, Body, Param, UseGuards, Req, Res, HttpCode, HttpStatus } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { AuthGuard } from '@nestjs/passport'
 import { Response } from 'express'
@@ -30,11 +30,26 @@ export class CertificatesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN', 'VERIFICATOR')
   @ApiBearerAuth()
-  @HttpCode(HttpStatus.ACCEPTED)
-  @ApiOperation({ summary: 'Queue certificate minting (admin/verificator only)' })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Mint certificate (admin/verificator only)' })
   async mint(@Param('productId') productId: string, @Req() req: any) {
-    const job = await this.certQueue.addMintJob(productId, req.user.id)
-    return { message: 'Minting queued', jobId: job.id }
+    const cert = await this.certs.mint(productId, req.user.id)
+    return { message: 'Certificate minted successfully', certificate: cert }
+  }
+
+  @Post('record/:productId')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN', 'VERIFICATOR')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Record minted certificate in database (admin/verificator only)' })
+  async record(
+    @Param('productId') productId: string,
+    @Body() dto: { onChainTokenId: number; transactionHash: string },
+    @Req() req: any
+  ) {
+    const cert = await this.certs.recordOnChain(productId, req.user.id, dto.onChainTokenId, dto.transactionHash)
+    return { message: 'Certificate recorded successfully', certificate: cert }
   }
 
   @Get(':id/qr')

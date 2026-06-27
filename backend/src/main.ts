@@ -15,6 +15,7 @@ async function bootstrap() {
 
   app.use(cookieParser())
   app.use(helmet({
+    crossOriginResourcePolicy: false,
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],

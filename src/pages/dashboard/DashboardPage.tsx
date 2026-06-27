@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom'
 import { Package, ScrollText, Scan, ShieldCheck } from 'lucide-react'
 import { getDashboardStats } from '../../lib/api'
 import type { DashboardStats } from '../../types'
+import { useAuth } from '../../context/AuthContext'
 
 export default function DashboardPage() {
+  const { user } = useAuth()
   const [stats, setStats] = useState<DashboardStats>({ totalProducts: 0, totalCertificates: 0, totalScans: 0, verifiedProducts: 0, recentProducts: [] })
 
   useEffect(() => {
@@ -56,7 +58,11 @@ export default function DashboardPage() {
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-batik-50 transition-colors">
                   <img src={p.imageUrl} alt={p.productName}
                     className="w-12 h-12 rounded-lg object-cover border border-batik-200"
-                    onError={e => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/48/f9edda/7d421f?text=B' }} />
+                    onError={e => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><rect width="48" height="48" fill="%23f9edda"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="18" fill="%237d421f">B</text></svg>';
+                    }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-batik-900 truncate">{p.productName}</p>
                     <p className="text-xs text-batik-500">{p.tokenId} &middot; {p.certificationDate}</p>

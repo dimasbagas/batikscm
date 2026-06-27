@@ -3,6 +3,17 @@ import { ScrollText, Printer, Download } from 'lucide-react'
 import { getProducts } from '../../lib/api'
 import { QRCode } from '../../components/qr-code'
 import type { Product } from '../../types'
+import * as QRCodeLib from 'qrcode'
+
+const loadImage = (src: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = (e) => reject(e)
+    img.src = src
+  })
+}
 
 export default function CertificatesPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -11,36 +22,124 @@ export default function CertificatesPage() {
 
   function handlePrint() { window.print() }
 
-  function handleDownload(product: (typeof products)[0]) {
+  async function handleDownload(product: (typeof products)[0]) {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     canvas.width = 800; canvas.height = 600
+    
+    // Background and border
     ctx.fillStyle = '#fdf6ed'; ctx.fillRect(0, 0, canvas.width, canvas.height)
     ctx.strokeStyle = '#7d421f'; ctx.lineWidth = 6; ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20)
     ctx.strokeStyle = '#d4862e'; ctx.lineWidth = 2; ctx.strokeRect(22, 22, canvas.width - 44, canvas.height - 44)
+    
+    // Title
     ctx.fillStyle = '#3a1c0d'
     ctx.font = 'bold 26px Georgia, serif'; ctx.textAlign = 'center'
     ctx.fillText('Certificate of Authenticity', canvas.width / 2, 70)
     ctx.fillStyle = '#7d421f'; ctx.font = '14px Georgia, serif'
     ctx.fillText('Indonesian Traditional Batik', canvas.width / 2, 95)
-    ctx.fillStyle = '#3a1c0d'; ctx.font = '15px Inter, sans-serif'; ctx.textAlign = 'left'
+    
+    // --- Left Column: Product Image & Metadata ---
+    let productImg: HTMLImageElement;
+    try {
+      productImg = await loadImage(product.imageUrl)
+    } catch {
+      const fallbackSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="%23f9edda"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="120" fill="%237d421f">B</text></svg>';
+      productImg = await loadImage(fallbackSvg)
+    }
+    
+    // Draw Product Image
+    ctx.drawImage(productImg, 60, 130, 300, 300)
+    
+    // Draw image border
+    ctx.strokeStyle = '#e8d0bc'
+    ctx.lineWidth = 2
+    ctx.strokeRect(60, 130, 300, 300)
+    
+    // Draw table under product image
     const data = [
       ['Product Name', product.productName],
       ['Producer', product.producerName],
       ['Origin', product.originLocation],
       ['Production Date', product.productionDate],
-      ['Token ID', product.tokenId],
-      ['Certification Date', product.certificationDate],
     ]
-    let y = 140
+    
+    ctx.textAlign = 'left'
+    let y = 460
     data.forEach(([l, v]) => {
-      ctx.fillStyle = '#7d421f'; ctx.font = 'bold 13px Inter'; ctx.fillText(l, 60, y)
-      ctx.fillStyle = '#3a1c0d'; ctx.font = '13px Inter'; ctx.fillText(': ' + v, 200, y)
-      y += 30
+      // Draw border bottom line
+      ctx.strokeStyle = '#f2e5d5'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(60, y + 5)
+      ctx.lineTo(360, y + 5)
+      ctx.stroke()
+      
+      ctx.fillStyle = '#7d421f'; ctx.font = 'bold 12px Inter, sans-serif'
+      ctx.fillText(l, 60, y)
+      
+      ctx.fillStyle = '#3a1c0d'; ctx.font = 'bold 12px Inter, sans-serif'
+      ctx.textAlign = 'right'
+      ctx.fillText(v, 360, y)
+      ctx.textAlign = 'left' // reset
+      y += 24
     })
+    
+    // --- Right Column: QR Code & Info Box ---
+    const qrCanvas = document.createElement('canvas')
+    const qr = (QRCodeLib as any).toCanvas ? QRCodeLib : ((QRCodeLib as any).default || QRCodeLib);
+    await qr.toCanvas(qrCanvas, JSON.stringify({ tokenId: product.tokenId, hash: product.metadataHash }), {
+      width: 160,
+      color: { dark: '#7d421f', light: '#ffffff' },
+      margin: 1,
+    })
+    
+    // Draw QR Code
+    ctx.drawImage(qrCanvas, 510, 130, 160, 160)
+    
+    // Draw text below QR Code
+    ctx.fillStyle = '#7d421f'; ctx.font = '12px Inter, sans-serif'; ctx.textAlign = 'center'
+    ctx.fillText('Scan untuk verifikasi', 590, 310)
+    
+    // Info Box
+    const boxX = 440, boxY = 340, boxW = 300, boxH = 195
+    ctx.fillStyle = '#fcf8f2'
+    ctx.fillRect(boxX, boxY, boxW, boxH)
+    ctx.strokeStyle = '#e8d0bc'
+    ctx.lineWidth = 1
+    ctx.strokeRect(boxX, boxY, boxW, boxH)
+    
+    // Write contents inside Info Box
+    ctx.textAlign = 'left'
+    
+    // Token ID
+    ctx.fillStyle = '#7d421f'; ctx.font = '12px Inter, sans-serif'
+    ctx.fillText('Token ID', boxX + 15, boxY + 30)
+    ctx.fillStyle = '#3a1c0d'; ctx.font = 'bold 12px monospace'; ctx.textAlign = 'right'
+    ctx.fillText(product.tokenId, boxX + boxW - 15, boxY + 30)
+    
+    // Cert Date
+    ctx.textAlign = 'left'
+    ctx.fillStyle = '#7d421f'; ctx.font = '12px Inter, sans-serif'
+    ctx.fillText('Cert. Date', boxX + 15, boxY + 60)
+    ctx.fillStyle = '#3a1c0d'; ctx.font = '500 12px Inter, sans-serif'; ctx.textAlign = 'right'
+    ctx.fillText(product.certificationDate || '-', boxX + boxW - 15, boxY + 60)
+    
+    // Metadata Hash
+    ctx.textAlign = 'left'
+    ctx.fillStyle = '#7d421f'; ctx.font = '12px Inter, sans-serif'
+    ctx.fillText('Metadata Hash', boxX + 15, boxY + 95)
+    
+    // Value of Hash (split in 2 lines for wrapping)
     ctx.fillStyle = '#7d421f'; ctx.font = '10px monospace'
-    ctx.fillText('Metadata Hash: ' + product.metadataHash.substring(0, 50) + '...', 60, y + 15)
+    const hash = product.metadataHash || ''
+    const line1 = hash.substring(0, 32)
+    const line2 = hash.substring(32)
+    ctx.fillText(line1, boxX + 15, boxY + 120)
+    ctx.fillText(line2, boxX + 15, boxY + 135)
+    
+    // Trigger download
     const link = document.createElement('a')
     link.download = `Certificate_${product.tokenId}.png`; link.href = canvas.toDataURL('image/png'); link.click()
   }
@@ -87,7 +186,11 @@ export default function CertificatesPage() {
               <div className="space-y-3">
                 <img src={p.imageUrl} alt={p.productName}
                   className="w-full aspect-square object-cover rounded-xl border-2 border-batik-200"
-                  onError={e => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300/f9edda/7d421f?text=B' }} />
+                  onError={e => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="%23f9edda"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="120" fill="%237d421f">B</text></svg>';
+                  }} />
                 <div className="space-y-1.5 text-sm">
                   {[
                     ['Product Name', p.productName],

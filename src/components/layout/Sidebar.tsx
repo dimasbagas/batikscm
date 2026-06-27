@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Package, ScrollText, Settings, LogOut, Shield,
-  Users, FileSearch, Activity
+  Users, FileSearch, Activity, Wallet
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useWeb3 } from '../../context/Web3Context'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -21,6 +22,7 @@ const adminItems = [
 export function Sidebar() {
   const { pathname } = useLocation()
   const { user, logout } = useAuth()
+  const { account, isConnected, connectWallet, disconnectWallet } = useWeb3()
   const isAdmin = user?.role === 'admin'
 
   return (
@@ -70,9 +72,30 @@ export function Sidebar() {
           </>
         )}
       </nav>
-      <div className="p-4 border-t border-batik-100">
-        <div className="flex items-center gap-3 mb-3 px-1">
-          <div className="w-8 h-8 rounded-full bg-batik-200 flex items-center justify-center text-batik-700 text-sm font-bold">
+      <div className="p-4 border-t border-batik-100 space-y-4">
+        {/* Wallet Connection */}
+        <div className="px-1">
+          {isConnected ? (
+            <div className="flex items-center justify-between p-2 rounded-lg bg-green-50 border border-green-200 text-xs">
+              <div className="flex items-center gap-1.5 text-green-700 font-semibold truncate relative">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-ping"></div>
+                <div className="w-2 h-2 rounded-full bg-green-500 absolute"></div>
+                <span className="font-mono ml-3.5">{account?.substring(0, 6)}...{account?.substring(account.length - 4)}</span>
+              </div>
+              <button onClick={disconnectWallet} className="text-batik-500 hover:text-red-600 font-bold ml-2">
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <button onClick={connectWallet}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 transition-all shadow-sm">
+              <Wallet className="w-4 h-4" /> Hubungkan MetaMask
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 px-1">
+          <div className="w-8 h-8 rounded-full bg-batik-200 flex items-center justify-center text-batik-700 text-sm font-bold shrink-0">
             {user?.name?.charAt(0) || 'U'}
           </div>
           <div className="flex-1 min-w-0">

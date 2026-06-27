@@ -45,7 +45,11 @@ export default function ProductsPage() {
             className="bg-white rounded-xl border border-batik-100 p-4 flex items-center gap-4 hover:border-batik-300 transition-colors">
             <img src={p.imageUrl} alt={p.productName}
               className="w-16 h-16 rounded-xl object-cover border border-batik-200"
-              onError={e => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64/f9edda/7d421f?text=B' }} />
+              onError={e => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null;
+                target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" fill="%23f9edda"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="24" fill="%237d421f">B</text></svg>';
+              }} />
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-batik-900">{p.productName}</p>
               <p className="text-xs text-batik-500 font-mono mt-0.5">{p.tokenId}</p>

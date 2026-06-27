@@ -14,6 +14,7 @@ import { HealthModule } from './health/health.module'
 import { BullModule } from '@nestjs/bullmq'
 import { QueuesModule } from './queues/queues.module'
 import { StorageModule } from './storage/storage.module'
+import { BlockchainModule } from './blockchain/blockchain.module'
 
 @Module({
   providers: [
@@ -36,6 +37,7 @@ import { StorageModule } from './storage/storage.module'
     HealthModule,
     StorageModule,
     QueuesModule,
+    BlockchainModule,
   ],
 })
 export class AppModule {}

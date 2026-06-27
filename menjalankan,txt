@@ -1,0 +1,71 @@
+========================================================================
+             PANDUAN MENJALANKAN & MENGUJI BATIKCHAIN
+========================================================================
+
+Dokumen ini berisi informasi kredensial akun, perintah untuk menjalankan
+layanan secara manual, dan panduan konfigurasi MetaMask untuk pengujian.
+
+------------------------------------------------------------------------
+1. KREDENSIAL AKUN
+------------------------------------------------------------------------
+* Akun UMKM:
+  Email: umkm@batikchain.id
+  Password: admin123
+
+* Akun Admin:
+  Email: admin@batikchain.id
+  Password: admin123
+
+------------------------------------------------------------------------
+2. PERINTAH UNTUK MENJALANKAN LAYANAN (SECARA MANUAL)
+------------------------------------------------------------------------
+Untuk menjalankan proyek ini, Anda memerlukan tiga jendela terminal:
+
+* Terminal 1: Local Blockchain Node (Hardhat)
+  Perintah: cd contracts && npx hardhat node
+  URL Node: http://127.0.0.1:8545
+
+* Terminal 2: Backend Server (NestJS)
+  Perintah: cd backend && npm run start:dev
+  URL API:  http://localhost:3000
+
+* Terminal 3: Frontend Web (Vite + React)
+  Perintah: npm run dev (dijalankan dari root folder)
+  URL Web:  http://localhost:5173
+
+------------------------------------------------------------------------
+3. PANDUAN KONFIGURASI METAMASK UNTUK ADMIN
+------------------------------------------------------------------------
+Karena proses verifikasi dan pencetakan sertifikat (NFT) dilakukan secara
+on-chain langsung dari sisi browser admin (client-side signing), Anda wajib
+menghubungkan MetaMask ke jaringan lokal dan mengimpor akun owner.
+
+Langkah 1: Tambahkan Jaringan Lokal Hardhat di MetaMask
+* Nama Jaringan: Hardhat Localhost
+* RPC URL: http://127.0.0.1:8545
+* Chain ID: 31337
+* Simbol Mata Uang: ETH
+
+Langkah 2: Impor Akun Owner Kontrak Pintar
+Hanya alamat owner kontrak pintar (Account #0 dari Hardhat) yang memiliki
+hak untuk mencetak sertifikat (onlyOwner). Silakan impor akun tersebut
+ke MetaMask Anda menggunakan Private Key berikut:
+
+Private Key:
+0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
+------------------------------------------------------------------------
+4. SKENARIO ALUR PENGUJIAN END-TO-END
+------------------------------------------------------------------------
+Alur A: Registrasi Produk oleh UMKM
+1. Masuk ke halaman http://localhost:5173/login menggunakan akun UMKM.
+2. Buka menu "Registrasi Produk" dan isi formulir.
+3. Unggah gambar batik dan klik "Register". Status produk awal adalah "Terdaftar" (REGISTERED).
+
+Alur B: Verifikasi & Minting NFT oleh Admin
+1. Keluar dari akun UMKM, lalu masuk menggunakan akun Admin.
+2. Pastikan MetaMask Anda terhubung ke jaringan Hardhat Localhost dan menggunakan akun owner yang diimpor.
+3. Klik tombol "Hubungkan MetaMask" di bagian bawah sidebar dashboard admin.
+4. Buka menu daftar produk. Cari produk berstatus "Terdaftar" yang baru dibuat, lalu klik tombol "Verifikasi".
+5. Setujui (sign) transaksi registrasi produk dan pencetakan sertifikat di pop-up MetaMask.
+6. Status produk akan otomatis berubah menjadi "Terverifikasi" (VERIFIED) secara real-time setelah transaksi berhasil divalidasi oleh blockchain!

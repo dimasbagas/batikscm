@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Req, UseInterceptors, UploadedFile, BadRequestException, MaxFileSizeValidator, ParseFilePipe, FileTypeValidator } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Req, UseInterceptors, UploadedFile, BadRequestException, MaxFileSizeValidator, ParseFilePipe, FileTypeValidator, Res, NotFoundException } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger'
 import { AuthGuard } from '@nestjs/passport'
@@ -7,16 +7,37 @@ import { CreateProductDto } from './dto/create-product.dto'
 import { RolesGuard } from '../common/guards/roles.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { R2Service } from '../storage/r2.service'
+import { CertificatesService } from '../certificates/certificates.service'
+import * as path from 'path'
+import * as fs from 'fs'
 
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
-  constructor(private products: ProductsService, private r2: R2Service) {}
+  constructor(
+    private products: ProductsService,
+    private r2: R2Service,
+    private certs: CertificatesService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all products' })
   findAll(@Query() query: any) {
     return this.products.findAll(query)
+  }
+
+  @Get('image/:folder/:filename')
+  @ApiOperation({ summary: 'Serve uploaded product image' })
+  serveImage(
+    @Param('folder') folder: string,
+    @Param('filename') filename: string,
+    @Res() res: any,
+  ) {
+    const filePath = path.join(process.cwd(), 'uploads', folder, filename)
+    if (!fs.existsSync(filePath)) {
+      throw new NotFoundException('Image not found')
+    }
+    res.sendFile(filePath)
   }
 
   @Get(':id')
@@ -32,8 +53,14 @@ export class ProductsController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create new product' })
-  create(@Body() dto: CreateProductDto, @Req() req: any) {
-    return this.products.create(dto, req.user.id)
+  async create(@Body() dto: CreateProductDto, @Req() req: any) {
+    const product = await this.products.create(dto, req.user.id)
+    try {
+      await this.certs.mint(product.id, req.user.id)
+    } catch (e) {
+      // Keep it registered locally even if blockchain fails
+    }
+    return this.products.findOne(product.id)
   }
 
   @Patch(':id')

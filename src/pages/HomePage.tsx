@@ -1,7 +1,18 @@
-import { Link } from 'react-router-dom'
-import { Shield, Scan, QrCode, ArrowRight } from 'lucide-react'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Shield, Scan, QrCode, ArrowRight, Search } from 'lucide-react'
 
 export default function HomePage() {
+  const [tokenId, setTokenId] = useState('')
+  const navigate = useNavigate()
+
+  function handleVerify(e: React.FormEvent) {
+    e.preventDefault()
+    if (tokenId.trim()) {
+      navigate(`/verify/${tokenId.trim()}`)
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-batik-100 bg-white/70 backdrop-blur-md sticky top-0 z-50">
@@ -34,14 +45,34 @@ export default function HomePage() {
           <p className="mt-5 text-lg text-batik-600 max-w-xl mx-auto">
             Platform nasional untuk UMKM batik mendaftarkan produk ke blockchain, menghasilkan sertifikat digital NFT, dan QR Code anti-pemalsuan.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 mt-8">
+
+          <form onSubmit={handleVerify} className="mt-8 max-w-md mx-auto flex gap-2 p-1.5 rounded-2xl border border-batik-200 bg-white shadow-lg focus-within:ring-2 focus-within:ring-batik-300 transition-all">
+            <div className="flex-1 flex items-center gap-2 pl-3">
+              <Search className="w-5 h-5 text-batik-400 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Masukkan Kode Unik (misal: BC-2023-001)"
+                value={tokenId}
+                onChange={e => setTokenId(e.target.value)}
+                className="w-full text-sm bg-transparent border-0 focus:outline-none focus:ring-0 text-batik-900 placeholder:text-batik-400"
+              />
+            </div>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 px-6 py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-batik-700 to-batik-800 hover:from-batik-800 hover:to-batik-900 transition-all"
+            >
+              Verifikasi
+            </button>
+          </form>
+
+          <div className="flex flex-wrap justify-center gap-4 mt-6">
             <Link to="/register"
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-batik-700 to-batik-800 hover:from-batik-800 hover:to-batik-900 shadow-lg shadow-batik-200">
-              Daftarkan UMKM Anda <ArrowRight className="w-4 h-4" />
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-batik-700 to-batik-800 hover:from-batik-800 hover:to-batik-900 shadow-md">
+              Daftarkan UMKM Anda
             </Link>
             <Link to="/verify/BC-2023-001"
               className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-batik-700 font-semibold border-2 border-batik-300 hover:bg-batik-50">
-              <Scan className="w-4 h-4" /> Verifikasi Produk
+              <Scan className="w-4 h-4" /> Scan QR Code (Demo)
             </Link>
           </div>
         </section>

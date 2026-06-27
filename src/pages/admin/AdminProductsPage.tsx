@@ -1,14 +1,78 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, Package } from 'lucide-react'
-import { getProducts } from '../../lib/api'
+import { getProducts, getProductById, recordCertificate } from '../../lib/api'
+import { useWeb3 } from '../../context/Web3Context'
 import type { Product } from '../../types'
 
 export default function AdminProductsPage() {
   const [search, setSearch] = useState('')
   const [products, setProducts] = useState<Product[]>([])
+  const [verifying, setVerifying] = useState<string | null>(null)
+  const { account, isConnected, connectWallet, getBatikContract } = useWeb3()
 
   useEffect(() => { getProducts().then(setProducts) }, [])
+
+  async function handleVerifyProduct(productId: string) {
+    if (!isConnected) {
+      const conn = await connectWallet()
+      if (!conn) {
+        alert('Hubungkan MetaMask terlebih dahulu untuk memverifikasi produk ke Blockchain.')
+        return
+      }
+    }
+
+    if (!window.confirm('Apakah Anda yakin ingin memverifikasi produk ini ke Blockchain via MetaMask?')) return
+    setVerifying(productId)
+
+    try {
+      const product = await getProductById(productId)
+      if (!product) throw new Error('Produk tidak ditemukan')
+
+      const contract = await getBatikContract()
+      if (!contract) throw new Error('Gagal menghubungkan smart contract. Pastikan Hardhat node aktif.')
+
+      console.log('Registering product on-chain...')
+      const regTx = await contract.registerProduct(
+        product.productName,
+        product.producerName,
+        product.originLocation,
+        product.metadataHash,
+        product.imageUrl
+      )
+      const regReceipt = await regTx.wait()
+
+      const regEvent = regReceipt.logs
+        .map((log: any) => {
+          try {
+            return contract.interface.parseLog(log)
+          } catch {
+            return null
+          }
+        })
+        .find((e: any) => e && e.name === 'ProductRegistered')
+
+      if (!regEvent) throw new Error('ProductRegistered event tidak ditemukan di blockchain receipt')
+      const onChainTokenId = Number(regEvent.args.tokenId)
+
+      console.log('Minting certificate NFT on-chain...')
+      const certUri = `http://localhost:3000/api/v1/metadata/${product.tokenId}`
+      const mintTx = await contract.mintCertificate(onChainTokenId, account, certUri)
+      const mintReceipt = await mintTx.wait()
+
+      await recordCertificate(productId, onChainTokenId, mintReceipt.hash)
+
+      alert(`Sertifikat (Token ID: ${product.tokenId}) berhasil diterbitkan ke Blockchain via MetaMask!`)
+      const updated = await getProducts()
+      setProducts(updated)
+    } catch (e: any) {
+      console.error(e)
+      const errorReason = e?.reason || e?.message || JSON.stringify(e)
+      alert(`Gagal memverifikasi produk: ${errorReason}\n\nCatatan: Pastikan Anda menghubungkan MetaMask menggunakan akun Deployer/Owner Contract (Account #0 Hardhat) untuk mencetak sertifikat.`)
+    } finally {
+      setVerifying(null)
+    }
+  }
 
   const filtered = products.filter(p =>
     p.productName.toLowerCase().includes(search.toLowerCase()) ||
@@ -41,6 +105,7 @@ export default function AdminProductsPage() {
                 <th className="text-left px-5 py-3 font-semibold text-batik-700">Asal</th>
                 <th className="text-left px-5 py-3 font-semibold text-batik-700">Status</th>
                 <th className="text-left px-5 py-3 font-semibold text-batik-700">Tanggal</th>
+                <th className="text-left px-5 py-3 font-semibold text-batik-700">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -50,7 +115,11 @@ export default function AdminProductsPage() {
                     <div className="flex items-center gap-2">
                       <img src={p.imageUrl} alt={p.productName}
                         className="w-9 h-9 rounded-lg object-cover border border-batik-200"
-                        onError={e => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/36/f9edda/7d421f?text=B' }} />
+                        onError={e => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" fill="%23f9edda"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="14" fill="%237d421f">B</text></svg>';
+                        }} />
                       <span className="font-medium text-batik-900">{p.productName}</span>
                     </div>
                   </td>
@@ -66,10 +135,20 @@ export default function AdminProductsPage() {
                     </span>
                   </td>
                   <td className="px-5 py-3 text-batik-500 text-xs">{p.certificationDate}</td>
+                  <td className="px-5 py-3">
+                    {p.status === 'registered' ? (
+                      <button onClick={() => handleVerifyProduct(p.id)} disabled={verifying === p.id}
+                        className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-batik-700 to-batik-800 text-white text-xs font-semibold hover:from-batik-800 hover:to-batik-900 disabled:opacity-60 transition-all">
+                        {verifying === p.id ? 'Memproses...' : 'Verifikasi'}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-batik-400 font-medium">Selesai</span>
+                    )}
+                  </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={6} className="px-5 py-12 text-center text-batik-400">
+                <tr><td colSpan={7} className="px-5 py-12 text-center text-batik-400">
                   <Package className="w-8 h-8 mx-auto mb-2" />
                   <p>Tidak ada produk ditemukan</p>
                 </td></tr>

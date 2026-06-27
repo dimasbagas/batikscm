@@ -19,7 +19,14 @@ export default function NewProductPage() {
     if (!form.productName.trim()) e.productName = 'Nama produk wajib diisi'
     if (!form.producerName.trim()) e.producerName = 'Nama produsen wajib diisi'
     if (!form.originLocation.trim()) e.originLocation = 'Asal daerah wajib diisi'
-    if (!form.productionDate) e.productionDate = 'Tanggal produksi wajib diisi'
+    if (!form.productionDate) {
+      e.productionDate = 'Tanggal produksi wajib diisi'
+    } else {
+      const year = new Date(form.productionDate).getFullYear()
+      if (year < 1900 || year > 2100) {
+        e.productionDate = 'Tahun produksi tidak valid (harus antara 1900 - 2100)'
+      }
+    }
     if (!file && !form.imageUrl) e.imageUrl = 'Gambar produk wajib diupload'
     setErrors(e)
     return Object.keys(e).length === 0
@@ -61,10 +68,15 @@ export default function NewProductPage() {
     setLoading(true)
     try {
       const imageUrl = await uploadFile()
-      await registerProduct({ ...form, imageUrl })
+      const formattedDate = new Date(form.productionDate).toISOString()
+      const payload = { ...form, productionDate: formattedDate, imageUrl }
+      console.log('Sending product payload:', JSON.stringify(payload))
+      await registerProduct(payload)
       navigate('/dashboard/products')
-    } catch {
-      setErrors({ productName: 'Gagal menyimpan produk. Coba lagi.' })
+    } catch (err: any) {
+      console.error('Failed to register product:', JSON.stringify(err.response?.data || err))
+      const msg = err.response?.data?.message
+      setErrors({ productName: Array.isArray(msg) ? msg.join(', ') : 'Gagal menyimpan produk. Coba lagi.' })
     } finally {
       setLoading(false)
     }
@@ -112,7 +124,7 @@ export default function NewProductPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-batik-800 mb-1.5">Tanggal Produksi</label>
-              <input type="date" value={form.productionDate} onChange={e => setForm(p => ({ ...p, productionDate: e.target.value }))}
+              <input type="date" min="1900-01-01" max="2100-12-31" value={form.productionDate} onChange={e => setForm(p => ({ ...p, productionDate: e.target.value }))}
                 className="w-full px-4 py-2.5 rounded-lg border border-batik-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-batik-300" />
               {errors.productionDate && <p className="text-red-500 text-xs mt-1">{errors.productionDate}</p>}
             </div>
