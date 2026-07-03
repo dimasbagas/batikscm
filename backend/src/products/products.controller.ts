@@ -43,11 +43,11 @@ export class ProductsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get product by ID or tokenId' })
-  async findOne(@Param('id') id: string) {
-    try { return await this.products.findOne(id) } catch (e: any) {
+  async findOne(@Param('id') id: string, @Ip() ip: string) {
+    try { return await this.products.findOne(id, ip) } catch (e: any) {
       if (e.status !== 404) throw e
     }
-    return this.products.findByTokenId(id)
+    return this.products.findByTokenId(id, ip)
   }
 
   @Post()

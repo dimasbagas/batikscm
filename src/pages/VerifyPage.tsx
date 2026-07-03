@@ -21,26 +21,28 @@ export default function VerifyPage() {
 
         <div className="text-center mb-8">
           <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
-            !product ? 'bg-red-100' :
+            !product || (product as any).anomalyWarning ? 'bg-red-100' :
             product.status === 'verified' ? 'bg-green-100' :
             product.status === 'rejected' ? 'bg-red-100' : 'bg-yellow-100'
           }`}>
-            {!product ? <XCircle className="w-8 h-8 text-red-600" /> :
+            {!product || (product as any).anomalyWarning ? <XCircle className="w-8 h-8 text-red-600" /> :
              product.status === 'verified' ? <CheckCircle2 className="w-8 h-8 text-green-700" /> :
              product.status === 'rejected' ? <XCircle className="w-8 h-8 text-red-600" /> :
              <Shield className="w-8 h-8 text-yellow-700" />}
           </div>
           <h1 className={`text-2xl md:text-3xl font-bold ${
-            !product ? 'text-red-800' :
+            !product || (product as any).anomalyWarning ? 'text-red-800' :
             product.status === 'verified' ? 'text-green-800' :
             product.status === 'rejected' ? 'text-red-800' : 'text-yellow-800'
           }`}>
             {!product ? 'Produk Tidak Terverifikasi' :
+             (product as any).anomalyWarning ? 'Indikasi Produk Palsu' :
              product.status === 'verified' ? 'Produk Asli — Terverifikasi' :
              product.status === 'rejected' ? 'Registrasi Produk Ditolak' : 'Produk Terdaftar'}
           </h1>
           <p className="text-batik-600 mt-2 text-sm">
             {!product ? 'Produk Tidak Terverifikasi atau Diduga Palsu' :
+             (product as any).anomalyWarning ? 'Sistem mendeteksi aktivitas pemindaian yang tidak wajar pada QR Code ini.' :
              product.status === 'verified' ? 'Produk ini terdaftar dan terverifikasi di BatikChain Indonesia' :
              product.status === 'rejected' ? 'Pengajuan sertifikasi produk ini ditolak.' :
              'Produk ini telah terdaftar tetapi belum terverifikasi secara on-chain di Blockchain.'}
@@ -58,9 +60,24 @@ export default function VerifyPage() {
 
         {product && (
           <div className={`bg-white rounded-2xl border-2 p-6 md:p-8 shadow-lg space-y-5 ${
-            product.status === 'verified' ? 'border-green-300' :
-            product.status === 'rejected' ? 'border-red-300' : 'border-yellow-300'
+            product.status === 'verified' && !(product as any).anomalyWarning ? 'border-green-300' :
+            product.status === 'rejected' || (product as any).anomalyWarning ? 'border-red-300' : 'border-yellow-300'
           }`}>
+            {(product as any).anomalyWarning && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Peringatan Keamanan QR</h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      <p>{(product as any).anomalyWarning}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="flex justify-center">
               <img src={product.imageUrl} alt={product.productName}
                 className="w-40 h-40 md:w-48 md:h-48 object-cover rounded-2xl border-2 border-batik-200 shadow-md"

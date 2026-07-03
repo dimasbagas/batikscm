@@ -29,21 +29,56 @@ export class ProductsService {
     })
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, ip?: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: { producer: { select: { id: true, name: true, umkmName: true } }, certificate: true },
     })
     if (!product) throw new NotFoundException('Product not found')
-    return product
+    return this.checkAndLogAnomaly(product, ip)
   }
 
-  async findByTokenId(tokenId: string) {
+  async findByTokenId(tokenId: string, ip?: string) {
     const product = await this.prisma.product.findUnique({
       where: { tokenId },
       include: { certificate: true },
     })
     if (!product) throw new NotFoundException('Product not found')
+    return this.checkAndLogAnomaly(product, ip)
+  }
+
+  private async checkAndLogAnomaly(product: any, ip?: string) {
+    if (ip) {
+      // Record this view as a verification log with a special 'QR_SCAN' action to track anomaly
+      await this.prisma.verificationLog.create({
+        data: {
+          tokenId: product.tokenId,
+          hashInput: 'QR_SCAN',
+          isValid: true,
+          message: 'Product QR Scanned',
+          verifierIp: ip,
+          productId: product.id,
+        },
+      })
+    }
+
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const recentScans = await this.prisma.verificationLog.findMany({
+      where: {
+        productId: product.id,
+        createdAt: { gte: twentyFourHoursAgo },
+        hashInput: 'QR_SCAN' // only count the physical scans
+      }
+    })
+
+    const uniqueIPs = new Set(recentScans.map(s => s.verifierIp).filter(Boolean))
+    
+    // Threshold: more than 5 scans in 24 hours OR scanned from more than 2 different IPs
+    if (recentScans.length > 5 || uniqueIPs.size > 2) {
+      product.anomalyWarning = 'Peringatan: Produk ini terindikasi dipalsukan karena telah dipindai dari terlalu banyak lokasi/perangkat dalam waktu singkat.'
+      product.status = 'rejected' // Force visual indicator on frontend
+    }
+
     return product
   }
 
