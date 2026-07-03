@@ -11,6 +11,37 @@ export class UsersService {
     })
   }
 
+  async findMyPengrajin(distributorId: string) {
+    return this.prisma.user.findMany({
+      where: { distributorId, role: 'PENGRAJIN' },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        umkmName: true,
+        phone: true,
+        city: true,
+        province: true,
+        createdAt: true,
+        products: {
+          select: {
+            id: true,
+            tokenId: true,
+            productName: true,
+            batikName: true,
+            category: true,
+            motif: true,
+            status: true,
+            price: true,
+            stock: true,
+            imageUrl: true,
+            certificationDate: true,
+          }
+        }
+      }
+    })
+  }
+
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },

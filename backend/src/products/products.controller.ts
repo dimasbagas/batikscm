@@ -4,6 +4,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagg
 import { AuthGuard } from '@nestjs/passport'
 import { ProductsService } from './products.service'
 import { CreateProductDto } from './dto/create-product.dto'
+import { IssueFabricDto } from './dto/issue-fabric.dto'
 import { RolesGuard } from '../common/guards/roles.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { R2Service } from '../storage/r2.service'
@@ -55,12 +56,56 @@ export class ProductsController {
   @ApiOperation({ summary: 'Create new product' })
   async create(@Body() dto: CreateProductDto, @Req() req: any) {
     const product = await this.products.create(dto, req.user.id)
-    try {
-      await this.certs.mint(product.id, req.user.id)
-    } catch (e) {
-      // Keep it registered locally even if blockchain fails
+    if (req.user.role === 'ADMIN' || req.user.role === 'VERIFICATOR') {
+      try {
+        await this.certs.mint(product.id, req.user.id)
+      } catch (e) {
+        // Keep it registered locally even if blockchain fails
+      }
     }
     return this.products.findOne(product.id)
+  }
+
+  @Post(':id/distribute')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('DISTRIBUTOR', 'ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Distribute a product (distributor only)' })
+  async distribute(
+    @Param('id') id: string,
+    @Body() dto: { imageUrl: string; distributorName: string },
+    @Req() req: any
+  ) {
+    return this.products.distribute(id, dto.imageUrl, req.user.id, dto.distributorName)
+  }
+
+  @Post(':id/receive')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Confirm receipt of a distributed product' })
+  async receive(
+    @Param('id') id: string,
+    @Req() req: any
+  ) {
+    return this.products.receive(id, req.user.id, req.user.umkmName || req.user.name)
+  }
+
+  @Post('issue-fabric')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('DISTRIBUTOR', 'ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Issue fabric to artisan (distributor only)' })
+  async issueFabric(@Body() dto: IssueFabricDto, @Req() req: any) {
+    return this.products.issueFabric(dto, req.user.id)
+  }
+
+  @Post(':id/complete-work')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('PENGRAJIN', 'ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Confirm artisan work completion (artisan only)' })
+  async completeWork(@Param('id') id: string, @Req() req: any) {
+    return this.products.completeArtisanWork(id, req.user.id)
   }
 
   @Patch(':id')

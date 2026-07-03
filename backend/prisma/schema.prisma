@@ -12,10 +12,15 @@ enum Role {
   UMKM
   VERIFICATOR
   ADMIN
+  DISTRIBUTOR
+  PENGRAJIN
 }
 
 enum ProductStatus {
+  FABRIC_ISSUED
   REGISTERED
+  DISTRIBUTED
+  RECEIVED
   VERIFIED
   REJECTED
 }
@@ -39,11 +44,13 @@ model User {
   updatedAt DateTime @updatedAt
 
   products           Product[]
+  distributedProducts Product[]      @relation("ProductDistributor")
   certificates       Certificate[]
   ownedFromProducts  OwnershipHistory[] @relation("OwnerFrom")
   ownedToProducts    OwnershipHistory[] @relation("OwnerTo")
   auditLogs          AuditLog[]
   notifications Notification[]
+  distributorId String?
 }
 
 model Product {
@@ -59,7 +66,7 @@ model Product {
   productionDate  DateTime
   price           Float?
   stock           Int?
-  imageUrl        String
+  imageUrl        String?
   detailImageUrl  String?
   metadataHash    String
   certificationDate DateTime?   @default(now())
@@ -68,10 +75,19 @@ model Product {
   contractAddress String?
   transactionHash String?
   producerId      String
+  onChainTokenId  String?
+  distributorId   String?
+  distributorName String?
+  distributedAt   DateTime?
+  distributorTxHash String?
+  receivedAt      DateTime?
+  recipientId     String?
+  recipientName   String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   producer          User              @relation(fields: [producerId], references: [id])
+  distributor       User?             @relation("ProductDistributor", fields: [distributorId], references: [id])
   certificate       Certificate?
   verificationLogs  VerificationLog[]
   ownershipHistory  OwnershipHistory[]

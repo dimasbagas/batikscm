@@ -30,28 +30,32 @@ export default function AdminDashboardPage() {
       const contract = await getBatikContract()
       if (!contract) throw new Error('Gagal menghubungkan smart contract. Pastikan Hardhat node aktif.')
 
-      console.log('Registering product on-chain...')
-      const regTx = await contract.registerProduct(
-        product.productName,
-        product.producerName,
-        product.originLocation,
-        product.metadataHash,
-        product.imageUrl
-      )
-      const regReceipt = await regTx.wait()
+      let onChainTokenId = product.onChainTokenId ? Number(product.onChainTokenId) : null
 
-      const regEvent = regReceipt.logs
-        .map((log: any) => {
-          try {
-            return contract.interface.parseLog(log)
-          } catch {
-            return null
-          }
-        })
-        .find((e: any) => e && e.name === 'ProductRegistered')
+      if (!onChainTokenId) {
+        console.log('Registering product on-chain...')
+        const regTx = await contract.registerProduct(
+          product.productName,
+          product.producerName,
+          product.originLocation,
+          product.metadataHash,
+          product.imageUrl || ''
+        )
+        const regReceipt = await regTx.wait()
 
-      if (!regEvent) throw new Error('ProductRegistered event tidak ditemukan di blockchain receipt')
-      const onChainTokenId = Number(regEvent.args.tokenId)
+        const regEvent = regReceipt.logs
+          .map((log: any) => {
+            try {
+              return contract.interface.parseLog(log)
+            } catch {
+              return null
+            }
+          })
+          .find((e: any) => e && e.name === 'ProductRegistered')
+
+        if (!regEvent) throw new Error('ProductRegistered event tidak ditemukan di blockchain receipt')
+        onChainTokenId = Number(regEvent.args.tokenId)
+      }
 
       console.log('Minting certificate NFT on-chain...')
       const certUri = `http://localhost:3000/api/v1/metadata/${product.tokenId}`

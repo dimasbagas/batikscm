@@ -4,8 +4,8 @@ import type { User } from '../types'
 
 interface AuthContextType {
   user: User | null
-  login: (email: string, password: string) => Promise<boolean>
-  register: (data: Partial<User> & { password: string }) => Promise<boolean>
+  login: (email: string, password: string) => Promise<void>
+  register: (data: Partial<User> & { password: string }) => Promise<void>
   logout: () => void
   isLoading: boolean
 }
@@ -37,13 +37,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         city: res.data.user?.city,
         province: res.data.user?.province,
         avatar: res.data.user?.photoUrl,
+        distributorId: res.data.user?.distributorId,
       }
       localStorage.setItem('auth_token', res.data.accessToken)
       localStorage.setItem('user', JSON.stringify(u))
       setUser(u)
-      return true
-    } catch {
-      return false
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || 'Email atau password salah')
     } finally {
       setIsLoading(false)
     }
@@ -60,6 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         phone: data.phone,
         city: data.city,
         province: data.province,
+        role: data.role ? data.role.toUpperCase() : undefined,
+        distributorId: data.distributorId || undefined,
       })
       const u: User = {
         id: res.data.user?.id ?? '',
@@ -71,15 +73,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         city: res.data.user?.city,
         province: res.data.user?.province,
         avatar: res.data.user?.photoUrl,
+        distributorId: res.data.user?.distributorId,
       }
       if (res.data.accessToken) {
         localStorage.setItem('auth_token', res.data.accessToken)
       }
       localStorage.setItem('user', JSON.stringify(u))
       setUser(u)
-      return true
-    } catch {
-      return false
+    } catch (err: any) {
+      const msg = err.response?.data?.message
+      if (Array.isArray(msg)) {
+        throw new Error(msg.join(', '))
+      }
+      throw new Error(msg || 'Pendaftaran gagal')
     } finally {
       setIsLoading(false)
     }

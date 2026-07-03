@@ -58,4 +58,10 @@ export class AuthController {
     res.cookie('refresh_token', result.refreshToken, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 })
     res.redirect(FRONTEND_URL)
   }
+
+  @Get('distributors')
+  @ApiOperation({ summary: 'Get all registered distributors (public)' })
+  async getDistributors() {
+    return this.auth.getDistributors()
+  }
 }

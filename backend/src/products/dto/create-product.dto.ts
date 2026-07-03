@@ -12,6 +12,7 @@ export class CreateProductDto {
   @ApiProperty() @IsDateString() productionDate: string
   @ApiPropertyOptional() @IsOptional() @IsNumber() price?: number
   @ApiPropertyOptional() @IsOptional() @IsNumber() stock?: number
-  @ApiProperty() @IsString() imageUrl: string
+  @ApiPropertyOptional() @IsOptional() @IsString() imageUrl?: string
   @ApiPropertyOptional() @IsOptional() @IsString() detailImageUrl?: string
+  @ApiPropertyOptional() @IsOptional() @IsString() distributorId?: string
 }

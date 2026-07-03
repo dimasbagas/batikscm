@@ -95,6 +95,37 @@ describe("BatikNFT", function () {
     });
   });
 
+  describe("Distribution", function () {
+    beforeEach(async function () {
+      const hash = ethers.keccak256(ethers.toUtf8Bytes("dist-hash"));
+      await contract.registerProduct("Batik Megamendung", "Artisan", "Cirebon", hash, "");
+    });
+
+    it("should allow distributor to distribute product and update metadata hash", async function () {
+      const newHash = ethers.keccak256(ethers.toUtf8Bytes("dist-hash-new"));
+      const tx = await contract.distributeProduct(1, "https://distributor.url/photo.jpg", "Distributor A", newHash);
+      
+      await expect(tx)
+        .to.emit(contract, "ProductDistributed")
+        .withArgs(1, "Distributor A", "https://distributor.url/photo.jpg", newHash);
+
+      const product = await contract.getProduct(1);
+      expect(product.photoUrl).to.equal("https://distributor.url/photo.jpg");
+      expect(product.distributorName).to.equal("Distributor A");
+      expect(product.status).to.equal(3); // Distributed
+      expect(product.metadataHash).to.equal(newHash);
+    });
+
+    it("should reject distribution if status is not Registered", async function () {
+      const newHash = ethers.keccak256(ethers.toUtf8Bytes("dist-hash-new"));
+      await contract.distributeProduct(1, "https://distributor.url/photo.jpg", "Distributor A", newHash);
+      
+      await expect(
+        contract.distributeProduct(1, "https://distributor.url/photo2.jpg", "Distributor B", newHash)
+      ).to.be.revertedWith("Must be in Registered status");
+    });
+  });
+
   describe("Verification", function () {
     beforeEach(async function () {
       const hash = ethers.keccak256(ethers.toUtf8Bytes("verify-hash"));

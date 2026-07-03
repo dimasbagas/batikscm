@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { User, Store, Mail, Phone, MapPin, Save } from 'lucide-react'
+import { User, Store, Mail, Phone, MapPin, Save, Shield } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 export default function SettingsPage() {
@@ -45,6 +45,24 @@ export default function SettingsPage() {
         </div>
         <div className="p-5 space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-batik-800 mb-1.5">Peran / Hak Akses (Role)</label>
+              <div className="relative">
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-batik-600" />
+                <input
+                  type="text"
+                  readOnly
+                  value={
+                    user?.role?.toLowerCase() === 'pengrajin' ? 'Pengrajin Batik (Artisan)' :
+                    user?.role?.toLowerCase() === 'distributor' ? 'Distributor / Sentra Penyalur' :
+                    user?.role?.toLowerCase() === 'umkm' ? 'UMKM Retailer / Toko' :
+                    user?.role?.toLowerCase() === 'admin' ? 'Administrator' :
+                    user?.role?.toLowerCase() === 'verificator' ? 'Verifikator Rantai Pasok' : 'Pengunjung'
+                  }
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-batik-200 bg-batik-50 text-batik-900 text-sm font-bold cursor-not-allowed outline-none"
+                />
+              </div>
+            </div>
             {fields.map(f => {
               const Icon = f.icon
               return (

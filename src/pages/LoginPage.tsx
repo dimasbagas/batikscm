@@ -26,8 +26,12 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     if (!email || !password) { setError('Email dan password wajib diisi'); return }
-    const ok = await login(email, password)
-    if (ok) navigate('/dashboard')
+    try {
+      await login(email, password)
+      navigate('/dashboard')
+    } catch (err: any) {
+      setError(err.message)
+    }
   }
 
   const googleLoginUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/auth/google`

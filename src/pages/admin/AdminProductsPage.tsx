@@ -32,28 +32,32 @@ export default function AdminProductsPage() {
       const contract = await getBatikContract()
       if (!contract) throw new Error('Gagal menghubungkan smart contract. Pastikan Hardhat node aktif.')
 
-      console.log('Registering product on-chain...')
-      const regTx = await contract.registerProduct(
-        product.productName,
-        product.producerName,
-        product.originLocation,
-        product.metadataHash,
-        product.imageUrl
-      )
-      const regReceipt = await regTx.wait()
+      let onChainTokenId = product.onChainTokenId ? Number(product.onChainTokenId) : null
 
-      const regEvent = regReceipt.logs
-        .map((log: any) => {
-          try {
-            return contract.interface.parseLog(log)
-          } catch {
-            return null
-          }
-        })
-        .find((e: any) => e && e.name === 'ProductRegistered')
+      if (!onChainTokenId) {
+        console.log('Registering product on-chain...')
+        const regTx = await contract.registerProduct(
+          product.productName,
+          product.producerName,
+          product.originLocation,
+          product.metadataHash,
+          product.imageUrl || ''
+        )
+        const regReceipt = await regTx.wait()
 
-      if (!regEvent) throw new Error('ProductRegistered event tidak ditemukan di blockchain receipt')
-      const onChainTokenId = Number(regEvent.args.tokenId)
+        const regEvent = regReceipt.logs
+          .map((log: any) => {
+            try {
+              return contract.interface.parseLog(log)
+            } catch {
+              return null
+            }
+          })
+          .find((e: any) => e && e.name === 'ProductRegistered')
+
+        if (!regEvent) throw new Error('ProductRegistered event tidak ditemukan di blockchain receipt')
+        onChainTokenId = Number(regEvent.args.tokenId)
+      }
 
       console.log('Minting certificate NFT on-chain...')
       const certUri = `http://localhost:3000/api/v1/metadata/${product.tokenId}`
@@ -129,14 +133,19 @@ export default function AdminProductsPage() {
                   <td className="px-5 py-3">
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${
                       p.status === 'verified' ? 'bg-green-100 text-green-700' :
+                      p.status === 'distributed' ? 'bg-orange-100 text-orange-700' :
+                      p.status === 'received' ? 'bg-blue-100 text-blue-700' :
                       p.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                     }`}>
-                      {p.status === 'verified' ? 'Terverifikasi' : p.status === 'rejected' ? 'Ditolak' : 'Terdaftar'}
+                      {p.status === 'verified' ? 'Terverifikasi' :
+                       p.status === 'distributed' ? 'Didistribusikan' :
+                       p.status === 'received' ? 'Diterima UMKM' :
+                       p.status === 'rejected' ? 'Ditolak' : 'Terdaftar'}
                     </span>
                   </td>
                   <td className="px-5 py-3 text-batik-500 text-xs">{p.certificationDate}</td>
                   <td className="px-5 py-3">
-                    {p.status === 'registered' ? (
+                    {p.status === 'registered' || p.status === 'distributed' || p.status === 'received' ? (
                       <button onClick={() => handleVerifyProduct(p.id)} disabled={verifying === p.id}
                         className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-batik-700 to-batik-800 text-white text-xs font-semibold hover:from-batik-800 hover:to-batik-900 disabled:opacity-60 transition-all">
                         {verifying === p.id ? 'Memproses...' : 'Verifikasi'}

@@ -11,7 +11,11 @@ interface Web3ContextType {
 
 const Web3Context = createContext<Web3ContextType | null>(null)
 
-export const CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+
+if (!import.meta.env.VITE_CONTRACT_ADDRESS) {
+  console.warn('VITE_CONTRACT_ADDRESS not set; using fallback hardcoded contract address. Update .env if you deployed to a different address.')
+}
 
 export const BatikNFT_ABI = [
   'function registerProduct(string _productName, string _producerName, string _originRegion, string _metadataHash, string _photoUrl) external returns (uint256)',

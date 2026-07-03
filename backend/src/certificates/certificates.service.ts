@@ -57,7 +57,7 @@ export class CertificatesService {
         product.producerName || product.producer.name || '',
         product.originLocation,
         product.metadataHash,
-        product.imageUrl,
+        product.imageUrl || '',
         baseNonce !== undefined ? { nonce: baseNonce } : undefined,
       )
       onChainTokenId = regResult.onChainTokenId
@@ -96,7 +96,7 @@ export class CertificatesService {
         originLocation: product.originLocation,
         productionDate: product.productionDate,
         metadataHash: product.metadataHash,
-        imageUrl: product.imageUrl,
+        imageUrl: product.imageUrl || '',
         qrValue,
         issuerId,
         nftTokenId: String(onChainTokenId),
@@ -144,7 +144,7 @@ export class CertificatesService {
         originLocation: product.originLocation,
         productionDate: product.productionDate,
         metadataHash: product.metadataHash,
-        imageUrl: product.imageUrl,
+        imageUrl: product.imageUrl || '',
         qrValue,
         issuerId,
         nftTokenId: String(onChainTokenId),

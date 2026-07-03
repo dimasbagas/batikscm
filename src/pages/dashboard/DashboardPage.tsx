@@ -50,11 +50,15 @@ export default function DashboardPage() {
         </div>
         <div className="p-5">
           {stats.recentProducts.length === 0 ? (
-            <p className="text-sm text-batik-500 text-center py-6">Belum ada produk. Daftarkan produk pertama Anda!</p>
+            <p className="text-sm text-batik-500 text-center py-6">
+              {user?.role === 'umkm' 
+                ? 'Belum ada produk diterima. Gunakan menu Terima Barang untuk menerima produk batik baru!' 
+                : 'Belum ada produk. Daftarkan produk pertama Anda!'}
+            </p>
           ) : (
             <div className="space-y-3">
               {stats.recentProducts.map(p => (
-                <Link key={p.id} to="/dashboard/products"
+                <Link key={p.id} to={user?.role === 'umkm' ? '/dashboard/receive' : '/dashboard/products'}
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-batik-50 transition-colors">
                   <img src={p.imageUrl} alt={p.productName}
                     className="w-12 h-12 rounded-lg object-cover border border-batik-200"

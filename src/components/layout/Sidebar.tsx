@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Package, ScrollText, Settings, LogOut, Shield,
-  Users, FileSearch, Activity, Wallet
+  Users, FileSearch, Activity, Wallet, Scan
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useWeb3 } from '../../context/Web3Context'
@@ -9,7 +9,7 @@ import { useWeb3 } from '../../context/Web3Context'
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/products', label: 'Produk', icon: Package },
-  { href: '/dashboard/certificates', label: 'Sertifikat', icon: ScrollText },
+  { href: '/dashboard/receive', label: 'Terima Barang', icon: Scan },
   { href: '/dashboard/settings', label: 'Pengaturan', icon: Settings },
 ]
 
@@ -24,6 +24,15 @@ export function Sidebar() {
   const { user, logout } = useAuth()
   const { account, isConnected, connectWallet, disconnectWallet } = useWeb3()
   const isAdmin = user?.role === 'admin'
+  const isUMKM = user?.role?.toLowerCase() === 'umkm'
+
+  const filteredNavItems = navItems.filter(item => {
+    if (isUMKM) {
+      return item.href === '/dashboard' || item.href === '/dashboard/products' || item.href === '/dashboard/receive' || item.href === '/dashboard/settings'
+    } else {
+      return item.href !== '/dashboard/receive'
+    }
+  })
 
   return (
     <aside className="hidden lg:flex lg:w-64 flex-col bg-white border-r border-batik-100 min-h-screen">
@@ -40,7 +49,7 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 p-3 space-y-1">
         <p className="px-3 text-xs font-semibold text-batik-400 uppercase tracking-wider">Umum</p>
-        {navItems.map(item => {
+        {filteredNavItems.map(item => {
           const Icon = item.icon
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
           return (

@@ -26,7 +26,8 @@ export class AuthService {
         phone: dto.phone,
         city: dto.city,
         province: dto.province,
-        role: 'UMKM',
+        role: dto.role || 'UMKM',
+        distributorId: dto.distributorId || null,
       },
     })
 
@@ -66,7 +67,7 @@ export class AuthService {
     })
 
     // In production: send email with reset link instead of logging
-    console.log(`[Password Reset] Email sent to ${email.slice(0, 3)}***`)
+    console.log(`[Password Reset] Link: http://localhost:5173/reset-password?token=${resetToken}`)
 
     return { message: 'Jika email terdaftar, link reset akan dikirim' }
   }
@@ -84,6 +85,13 @@ export class AuthService {
     })
 
     return { message: 'Password berhasil direset' }
+  }
+
+  async getDistributors() {
+    return this.prisma.user.findMany({
+      where: { role: 'DISTRIBUTOR' },
+      select: { id: true, name: true, umkmName: true, city: true, province: true },
+    })
   }
 
   async googleLogin(profile: { email: string; name: string; avatar?: string }) {

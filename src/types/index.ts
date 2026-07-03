@@ -2,12 +2,13 @@ export interface User {
   id: string
   email: string
   name: string
-  role: 'visitor' | 'umkm' | 'verificator' | 'admin'
+  role: 'visitor' | 'umkm' | 'verificator' | 'admin' | 'distributor' | 'pengrajin'
   umkmName?: string
   phone?: string
   city?: string
   province?: string
   avatar?: string
+  distributorId?: string
 }
 
 export interface Product {
@@ -22,16 +23,23 @@ export interface Product {
   productionDate: string
   price?: number
   stock?: number
-  imageUrl: string
+  imageUrl?: string
   detailImageUrl?: string
   metadataHash: string
   certificationDate: string
   producerName: string
   producerId: string
-  status: 'registered' | 'verified' | 'rejected'
+  status: 'fabric_issued' | 'registered' | 'distributed' | 'received' | 'verified' | 'rejected'
   certificateId?: string
   contractAddress?: string
   transactionHash?: string
+  onChainTokenId?: string
+  distributorId?: string
+  distributorName?: string
+  distributedAt?: string
+  distributorTxHash?: string
+  recipientId?: string
+  recipientName?: string
 }
 
 export interface Certificate {

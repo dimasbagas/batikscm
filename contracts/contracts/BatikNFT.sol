@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract BatikNFT is ERC721URIStorage, ERC721Pausable, Ownable {
     uint256 private _tokenIds;
 
-    enum ProductStatus { Registered, Certified, Revoked }
+    enum ProductStatus { Registered, Certified, Revoked, Distributed }
 
     struct Product {
         uint256 tokenId;
@@ -18,6 +18,8 @@ contract BatikNFT is ERC721URIStorage, ERC721Pausable, Ownable {
         string photoUrl;
         uint256 timestamp;
         ProductStatus status;
+        string distributorName;
+        uint256 distributedAt;
     }
 
     struct Certificate {
@@ -40,6 +42,7 @@ contract BatikNFT is ERC721URIStorage, ERC721Pausable, Ownable {
     mapping(bytes32 => bool) private _hashUsed;
 
     event ProductRegistered(uint256 indexed tokenId, string productName, string producerName, string metadataHash);
+    event ProductDistributed(uint256 indexed tokenId, string distributorName, string photoUrl, string metadataHash);
     event CertificateMinted(uint256 indexed tokenId, address indexed owner, string uri);
     event ProductVerified(uint256 indexed tokenId, address indexed verifier, bool match_);
     event CertificateTransferred(uint256 indexed tokenId, address indexed from, address indexed to);
@@ -77,13 +80,36 @@ contract BatikNFT is ERC721URIStorage, ERC721Pausable, Ownable {
             metadataHash: _metadataHash,
             photoUrl: _photoUrl,
             timestamp: block.timestamp,
-            status: ProductStatus.Registered
+            status: ProductStatus.Registered,
+            distributorName: "",
+            distributedAt: 0
         });
 
         _hashUsed[keccak256(abi.encodePacked(_metadataHash))] = true;
 
         emit ProductRegistered(newTokenId, _productName, _producerName, _metadataHash);
         return newTokenId;
+    }
+
+    function distributeProduct(
+        uint256 _tokenId,
+        string memory _photoUrl,
+        string memory _distributorName,
+        string memory _newMetadataHash
+    ) external whenNotPaused {
+        require(_tokenId > 0 && _tokenId <= _tokenIds, "Invalid token ID");
+        require(_products[_tokenId].status == ProductStatus.Registered, "Must be in Registered status");
+        require(bytes(_photoUrl).length > 0, "Photo URL required");
+        require(bytes(_distributorName).length > 0, "Distributor name required");
+        require(bytes(_newMetadataHash).length > 0, "New metadata hash required");
+
+        _products[_tokenId].photoUrl = _photoUrl;
+        _products[_tokenId].status = ProductStatus.Distributed;
+        _products[_tokenId].metadataHash = _newMetadataHash;
+        _products[_tokenId].distributorName = _distributorName;
+        _products[_tokenId].distributedAt = block.timestamp;
+
+        emit ProductDistributed(_tokenId, _distributorName, _photoUrl, _newMetadataHash);
     }
 
     function mintCertificate(
@@ -93,7 +119,10 @@ contract BatikNFT is ERC721URIStorage, ERC721Pausable, Ownable {
     ) external whenNotPaused onlyOwner returns (uint256) {
         require(_tokenId > 0 && _tokenId <= _tokenIds, "Invalid token ID");
         require(_products[_tokenId].timestamp > 0, "Product not registered");
-        require(_products[_tokenId].status == ProductStatus.Registered, "Already certified or revoked");
+        require(
+            _products[_tokenId].status == ProductStatus.Registered || _products[_tokenId].status == ProductStatus.Distributed,
+            "Already certified or revoked"
+        );
 
         _safeMint(_to, _tokenId);
         _setTokenURI(_tokenId, _certificateURI);

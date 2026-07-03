@@ -155,4 +155,36 @@ export class BlockchainService {
       throw error
     }
   }
+
+  async distributeProduct(
+    onChainTokenId: number,
+    photoUrl: string,
+    distributorName: string,
+    newMetadataHash: string,
+    options?: { nonce?: number },
+  ): Promise<{ txHash: string }> {
+    if (!this.isConfigured()) {
+      this.logger.warn('Blockchain service is not configured. Simulating product distribution.')
+      return {
+        txHash: '0x' + '0'.repeat(64),
+      }
+    }
+
+    try {
+      this.logger.log(`Distributing product on-chain. Token ID: ${onChainTokenId}, Distributor: ${distributorName}`)
+      const tx = await this.contract.distributeProduct(
+        onChainTokenId,
+        photoUrl,
+        distributorName,
+        newMetadataHash,
+        options || {},
+      )
+      const receipt = await tx.wait()
+      this.logger.log(`Product distributed successfully. Tx: ${receipt.hash}`)
+      return { txHash: receipt.hash }
+    } catch (error) {
+      this.logger.error(`Failed to distribute product on-chain: ${error.message}`, error.stack)
+      throw error
+    }
+  }
 }

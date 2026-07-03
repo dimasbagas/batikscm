@@ -70,27 +70,123 @@ export default function VerifyPage() {
                   target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" fill="%23f9edda"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="72" fill="%237d421f">B</text></svg>';
                 }} />
             </div>
+            
             <div className="space-y-3 text-sm">
               {([
                 ['Nama Produk', product.productName],
-                ['Produsen', product.producerName],
-                ['Daerah Asal', product.originLocation],
-                ['Tanggal Produksi', product.productionDate],
                 ['ID Produk', product.tokenId],
-                ...(product.status === 'verified' && product.certificationDate ? [['Tanggal Sertifikasi', product.certificationDate]] : []),
-                ...(product.status === 'verified' && product.contractAddress ? [['Contract Address', product.contractAddress]] : []),
-                ...(product.status === 'verified' && product.transactionHash ? [['Tx Hash', product.transactionHash]] : []),
+                ['Status Registrasi', product.status === 'verified' ? 'Terverifikasi' : product.status === 'distributed' ? 'Didistribusikan' : 'Terdaftar'],
               ] as const).map(([label, value]) => (
                 <div key={label} className="flex justify-between border-b border-batik-100 pb-2">
                   <span className="text-batik-600 font-medium">{label}</span>
-                  <span className="text-batik-900 font-semibold text-right max-w-[60%] truncate font-mono">{value}</span>
+                  <span className="text-batik-900 font-semibold text-right max-w-[60%] truncate">{value}</span>
                 </div>
               ))}
               <div>
-                <span className="text-batik-600 text-xs block mb-1 font-medium">Metadata Hash</span>
-                <div className="hash-text bg-batik-50 text-[11px]">{product.metadataHash}</div>
+                <span className="text-batik-600 text-xs block mb-1 font-medium">Metadata Hash Terkunci</span>
+                <div className="hash-text bg-batik-50 text-[11px] font-mono p-2 rounded border border-batik-100 break-all">{product.metadataHash}</div>
               </div>
             </div>
+
+            {/* Timeline Rantai Pasok */}
+            <div className="space-y-4 pt-4 border-t border-batik-100 text-left">
+              <h3 className="text-sm font-bold text-batik-900 uppercase tracking-wider">Alur Rantai Pasok (Supply Chain)</h3>
+              <div className="relative border-l border-batik-200 pl-5 ml-2.5 space-y-5">
+                
+                {/* Tahap 1: Penyerahan Kain Mentah */}
+                <div className="relative">
+                  <div className="absolute -left-[25px] top-1.5 w-2.5 h-2.5 rounded-full bg-blue-600 border-2 border-white"></div>
+                  <div>
+                    <h4 className="text-xs font-bold text-batik-900 uppercase">Tahap 1: Penyerahan Kain Mentah (Bahan Baku)</h4>
+                    <div className="bg-batik-50/50 rounded-lg p-2.5 mt-1.5 space-y-1 text-xs">
+                      <p><span className="font-semibold text-batik-600">Pemberi (Sentra):</span> {product.distributorName || 'Sentra Batik'}</p>
+                      <p><span className="font-semibold text-batik-600">Penerima (Pengrajin):</span> {product.producerName}</p>
+                      <p><span className="font-semibold text-batik-600">Tanggal Serah:</span> {product.productionDate}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tahap 2: Pengerjaan oleh Pengrajin */}
+                <div className="relative">
+                  <div className={`absolute -left-[25px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                    product.status !== 'fabric_issued' ? 'bg-green-600' : 'bg-yellow-500 animate-pulse'
+                  }`}></div>
+                  <div>
+                    <h4 className="text-xs font-bold text-batik-900 uppercase">Tahap 2: Pengerjaan & Registrasi oleh Pengrajin</h4>
+                    {product.status === 'fabric_issued' ? (
+                      <p className="text-xs text-yellow-600 font-semibold mt-1">⏳ Sedang dikerjakan oleh Pengrajin di rumah...</p>
+                    ) : (
+                      <div className="bg-batik-50/50 rounded-lg p-2.5 mt-1.5 space-y-1 text-xs">
+                        <p className="text-green-700 font-semibold">✓ Selesai Dikerjakan & Didaftarkan</p>
+                        <p><span className="font-semibold text-batik-600">Daerah Asal Produksi:</span> {product.originLocation}</p>
+                        {product.transactionHash && (
+                          <p className="truncate"><span className="font-semibold text-batik-600">Registrasi Tx:</span> <span className="font-mono text-[10px] text-batik-500">{product.transactionHash}</span></p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tahap 3: Distribusi oleh Sentra */}
+                <div className="relative">
+                  <div className={`absolute -left-[25px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                    ['distributed', 'received', 'verified'].includes(product.status) ? 'bg-orange-500' : 'bg-gray-300'
+                  }`}></div>
+                  <div>
+                    <h4 className="text-xs font-bold text-batik-900 uppercase">Tahap 3: Distribusi & Unggah Gambar Fisik oleh Sentra</h4>
+                    {['distributed', 'received', 'verified'].includes(product.status) ? (
+                      <div className="bg-batik-50/50 rounded-lg p-2.5 mt-1.5 space-y-1 text-xs">
+                        <p><span className="font-semibold text-batik-600">Distributor:</span> {product.distributorName}</p>
+                        <p><span className="font-semibold text-batik-600">Tanggal Distribusi:</span> {product.distributedAt}</p>
+                        {product.distributorTxHash && (
+                          <p className="truncate"><span className="font-semibold text-batik-600">Distribusi Tx:</span> <span className="font-mono text-[10px] text-batik-500">{product.distributorTxHash}</span></p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-batik-400 mt-1">⏳ Menunggu penyelesaian pengerjaan & pengiriman ke Sentra...</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tahap 4: Penerimaan oleh Toko / UMKM */}
+                <div className="relative">
+                  <div className={`absolute -left-[25px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                    ['received', 'verified'].includes(product.status) ? 'bg-purple-600' : 'bg-gray-300'
+                  }`}></div>
+                  <div>
+                    <h4 className="text-xs font-bold text-batik-900 uppercase">Tahap 4: Penerimaan Fisik oleh UMKM / Toko</h4>
+                    {['received', 'verified'].includes(product.status) ? (
+                      <div className="bg-batik-50/50 rounded-lg p-2.5 mt-1.5 space-y-1 text-xs">
+                        <p><span className="font-semibold text-batik-600">Toko/UMKM Penerima:</span> {(product as any).recipientName || 'Toko Resmi'}</p>
+                        <p><span className="font-semibold text-batik-600">Tanggal Diterima:</span> {(product as any).receivedAt ? new Date((product as any).receivedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Selesai'}</p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-batik-400 mt-1">⏳ Menunggu penerimaan fisik barang oleh Toko/UMKM...</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tahap 5: Sertifikasi Resmi Admin */}
+                <div className="relative">
+                  <div className={`absolute -left-[25px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                    product.status === 'verified' ? 'bg-green-600' : 'bg-gray-300'
+                  }`}></div>
+                  <div>
+                    <h4 className="text-xs font-bold text-batik-900 uppercase">Tahap 5: Sertifikasi Resmi & Minting NFT (Admin)</h4>
+                    {product.status === 'verified' ? (
+                      <div className="bg-batik-50/50 rounded-lg p-2.5 mt-1.5 space-y-1 text-xs">
+                        <p><span className="font-semibold text-batik-600">Tanggal Sertifikasi:</span> {product.certificationDate}</p>
+                        {product.contractAddress && <p className="truncate"><span className="font-semibold text-batik-600">Contract Address:</span> <span className="font-mono text-[10px] text-batik-500">{product.contractAddress}</span></p>}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-batik-400 mt-1">⏳ Menunggu verifikasi keaslian & penerbitan sertifikat resmi...</p>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
             {product.status === 'verified' && (
               <div className="flex justify-center pt-2">
                 <div className="bg-white p-4 rounded-xl shadow-md border border-batik-200 text-center">

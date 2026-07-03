@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, Package, ScrollText, Settings, LogOut, LayoutDashboard, Shield, X } from 'lucide-react'
+import { Menu, Package, ScrollText, Settings, LogOut, LayoutDashboard, Shield, X, Scan } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 const mobileNav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/products', label: 'Produk', icon: Package },
-  { href: '/dashboard/certificates', label: 'Sertifikat', icon: ScrollText },
+  { href: '/dashboard/receive', label: 'Terima Barang', icon: Scan },
   { href: '/dashboard/settings', label: 'Pengaturan', icon: Settings },
 ]
 
@@ -14,6 +14,15 @@ export function Header() {
   const { user, logout } = useAuth()
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
+  const isUMKM = user?.role?.toLowerCase() === 'umkm'
+
+  const filteredNavItems = mobileNav.filter(item => {
+    if (isUMKM) {
+      return item.href === '/dashboard' || item.href === '/dashboard/products' || item.href === '/dashboard/receive' || item.href === '/dashboard/settings'
+    } else {
+      return item.href !== '/dashboard/receive'
+    }
+  })
 
   return (
     <header className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-batik-100">
@@ -48,7 +57,7 @@ export function Header() {
               </button>
             </div>
             <nav className="flex-1 p-3 space-y-1">
-              {mobileNav.map(item => {
+              {filteredNavItems.map(item => {
                 const Icon = item.icon
                 const isActive = pathname === item.href
                 return (

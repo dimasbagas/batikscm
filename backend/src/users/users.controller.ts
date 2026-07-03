@@ -21,6 +21,12 @@ export class UsersController {
     return this.users.findAll()
   }
 
+  @Get('my-pengrajin')
+  @ApiOperation({ summary: 'Get partner pengrajins and their products (distributor only)' })
+  findMyPengrajin(@Req() req: any) {
+    return this.users.findMyPengrajin(req.user.id)
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
   findOne(@Param('id') id: string, @Req() req: any) {

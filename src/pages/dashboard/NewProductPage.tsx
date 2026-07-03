@@ -1,18 +1,48 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Upload, Shield } from 'lucide-react'
-import { registerProduct } from '../../lib/api'
+import { registerProduct, getPublicDistributors } from '../../lib/api'
+import { useAuth } from '../../context/AuthContext'
 import http from '../../lib/http'
 
 export default function NewProductPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const isPengrajin = user?.role?.toLowerCase() === 'pengrajin'
+
+  if (user?.role?.toLowerCase() === 'umkm') {
+    return (
+      <div className="bg-white rounded-xl border border-batik-100 p-12 text-center text-batik-400">
+        <Shield className="w-12 h-12 mx-auto mb-3" />
+        <p className="font-semibold text-batik-800 text-lg">Akses Terbatas</p>
+        <p className="text-sm text-batik-500 mt-1">Akun UMKM tidak dapat mendaftarkan produk baru.</p>
+      </div>
+    )
+  }
+
   const [form, setForm] = useState({
-    productName: '', producerName: '', originLocation: '', productionDate: '', imageUrl: '',
+    productName: '', producerName: '', originLocation: '', productionDate: '', imageUrl: '', distributorId: '',
   })
+  const [distributors, setDistributors] = useState<any[]>([])
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState('')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    getPublicDistributors().then(setDistributors)
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        producerName: user.umkmName || user.name || '',
+        originLocation: user.city ? `${user.city}, ${user.province || ''}` : '',
+        distributorId: user.distributorId || '',
+      }))
+    }
+  }, [user])
 
   function validate() {
     const e: Record<string, string> = {}
@@ -27,7 +57,7 @@ export default function NewProductPage() {
         e.productionDate = 'Tahun produksi tidak valid (harus antara 1900 - 2100)'
       }
     }
-    if (!file && !form.imageUrl) e.imageUrl = 'Gambar produk wajib diupload'
+    if (!isPengrajin && !file && !form.imageUrl) e.imageUrl = 'Gambar produk wajib diupload'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -108,13 +138,15 @@ export default function NewProductPage() {
                 className="w-full px-4 py-2.5 rounded-lg border border-batik-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-batik-300" />
               {errors.productName && <p className="text-red-500 text-xs mt-1">{errors.productName}</p>}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-batik-800 mb-1.5">Nama Produsen / UMKM</label>
-              <input value={form.producerName} onChange={e => setForm(p => ({ ...p, producerName: e.target.value }))}
-                placeholder="Nama UKM"
-                className="w-full px-4 py-2.5 rounded-lg border border-batik-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-batik-300" />
-              {errors.producerName && <p className="text-red-500 text-xs mt-1">{errors.producerName}</p>}
-            </div>
+            {!isPengrajin && (
+              <div>
+                <label className="block text-sm font-medium text-batik-800 mb-1.5">Nama Produsen / UMKM</label>
+                <input value={form.producerName} onChange={e => setForm(p => ({ ...p, producerName: e.target.value }))}
+                  placeholder="Nama UKM"
+                  className="w-full px-4 py-2.5 rounded-lg border border-batik-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-batik-300" />
+                {errors.producerName && <p className="text-red-500 text-xs mt-1">{errors.producerName}</p>}
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-batik-800 mb-1.5">Asal Daerah</label>
               <input value={form.originLocation} onChange={e => setForm(p => ({ ...p, originLocation: e.target.value }))}
@@ -128,6 +160,18 @@ export default function NewProductPage() {
                 className="w-full px-4 py-2.5 rounded-lg border border-batik-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-batik-300" />
               {errors.productionDate && <p className="text-red-500 text-xs mt-1">{errors.productionDate}</p>}
             </div>
+            {isPengrajin && (
+              <div>
+                <label className="block text-sm font-medium text-batik-800 mb-1.5">Distributor Penyalur</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={distributors.find(d => d.id === form.distributorId)?.umkmName || distributors.find(d => d.id === form.distributorId)?.name || 'Memuat distributor...'}
+                  className="w-full px-4 py-2.5 rounded-lg border border-batik-200 bg-batik-50 text-batik-700 text-sm font-semibold cursor-not-allowed outline-none"
+                />
+                <p className="text-[11px] text-batik-500 mt-1">Distributor otomatis terpilih dari akun Anda saat pendaftaran.</p>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-batik-800 mb-1.5">Gambar Produk</label>
               <div className={`flex items-center gap-3 p-2.5 border-2 rounded-lg cursor-pointer transition ${
@@ -152,7 +196,7 @@ export default function NewProductPage() {
           <div className="flex justify-end pt-2">
             <button type="submit" disabled={loading}
               className="px-8 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-batik-700 to-batik-800 hover:from-batik-800 hover:to-batik-900 disabled:opacity-60 transition-all">
-              {loading ? 'Mengupload & Mendaftarkan...' : 'Register & Generate QR Code'}
+              {loading ? 'Mengupload & Mendaftarkan...' : isPengrajin ? 'Daftarkan Batik (Ke Blockchain)' : 'Register & Generate QR Code'}
             </button>
           </div>
         </div>

@@ -6,6 +6,11 @@ export async function getProducts(): Promise<Product[]> {
   return (res.data ?? []).map(mapProduct)
 }
 
+export async function getPublicDistributors(): Promise<any[]> {
+  const res = await http.get('/auth/distributors')
+  return res.data ?? []
+}
+
 export async function getProductById(id: string): Promise<Product | undefined> {
   try {
     const res = await http.get(`/products/${id}`)
@@ -17,6 +22,11 @@ export async function getProductById(id: string): Promise<Product | undefined> {
 
 export async function registerProduct(data: Record<string, unknown>): Promise<Product> {
   const res = await http.post('/products', data)
+  return mapProduct(res.data)
+}
+
+export async function distributeProduct(productId: string, imageUrl: string, distributorName: string): Promise<Product> {
+  const res = await http.post(`/products/${productId}/distribute`, { imageUrl, distributorName })
   return mapProduct(res.data)
 }
 
@@ -144,6 +154,30 @@ export async function forgotPassword(email: string): Promise<void> {
   await http.post('/auth/forgot-password', { email })
 }
 
+export async function resetPassword(token: string, password: string): Promise<void> {
+  await http.post('/auth/reset-password', { token, password })
+}
+
+export async function getPartnerPengrajin(): Promise<any[]> {
+  const res = await http.get('/users/my-pengrajin')
+  return res.data
+}
+
+export async function receiveProduct(idOrTokenId: string): Promise<any> {
+  const res = await http.post(`/products/${idOrTokenId}/receive`)
+  return res.data
+}
+
+export async function issueFabric(productName: string, producerId: string, quantity: number): Promise<Product[]> {
+  const res = await http.post('/products/issue-fabric', { productName, producerId, quantity })
+  return (res.data ?? []).map(mapProduct)
+}
+
+export async function completeArtisanWork(idOrTokenId: string): Promise<Product> {
+  const res = await http.post(`/products/${idOrTokenId}/complete-work`)
+  return mapProduct(res.data)
+}
+
 export async function recordCertificate(productId: string, onChainTokenId: number, transactionHash: string): Promise<any> {
   const res = await http.post(`/certificates/record/${productId}`, { onChainTokenId, transactionHash })
   return res.data
@@ -162,8 +196,19 @@ function mapProduct(d: any): Product {
     metadataHash: d.metadataHash ?? '',
     certificationDate: certDate ? new Date(certDate).toISOString().split('T')[0] : '',
     producerId: d.producerId ?? d.producer?.id ?? '',
-    status: d.status === 'VERIFIED' ? 'verified' : d.status === 'REGISTERED' ? 'registered' : 'rejected',
+    status: d.status === 'VERIFIED' ? 'verified' :
+            d.status === 'DISTRIBUTED' ? 'distributed' :
+            d.status === 'RECEIVED' ? 'received' :
+            d.status === 'REGISTERED' ? 'registered' :
+            d.status === 'FABRIC_ISSUED' ? 'fabric_issued' : 'rejected',
     contractAddress: d.contractAddress ?? d.certificate?.contractAddress ?? '',
     transactionHash: d.transactionHash ?? '',
+    onChainTokenId: d.onChainTokenId ?? '',
+    distributorId: d.distributorId ?? '',
+    distributorName: d.distributorName ?? '',
+    distributedAt: d.distributedAt ? new Date(d.distributedAt).toISOString().split('T')[0] : '',
+    distributorTxHash: d.distributorTxHash ?? '',
+    recipientId: d.recipientId ?? '',
+    recipientName: d.recipientName ?? '',
   }
 }

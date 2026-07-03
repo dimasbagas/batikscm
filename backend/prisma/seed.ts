@@ -32,6 +32,21 @@ async function main() {
     },
   })
 
+  const distributor1 = await prisma.user.upsert({
+    where: { email: 'distributor@batikchain.id' },
+    update: {},
+    create: {
+      email: 'distributor@batikchain.id',
+      name: 'Budi Sentra',
+      password: hashed,
+      role: 'DISTRIBUTOR',
+      umkmName: 'Sentra Batik Riau',
+      phone: '081222333444',
+      city: 'Pekanbaru',
+      province: 'Riau',
+    },
+  })
+
   const product1 = await prisma.product.upsert({
     where: { tokenId: 'BC-2023-001' },
     update: {},
@@ -67,7 +82,7 @@ async function main() {
   })
 
   console.log('Seed data created successfully')
-  console.log({ admin, umkm1, product1, product2 })
+  console.log({ admin, umkm1, distributor1, product1, product2 })
 }
 
 main()
