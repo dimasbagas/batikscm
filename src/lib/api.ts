@@ -210,5 +210,7 @@ function mapProduct(d: any): Product {
     distributorTxHash: d.distributorTxHash ?? '',
     recipientId: d.recipientId ?? '',
     recipientName: d.recipientName ?? '',
+    receivedAt: d.receivedAt ? new Date(d.receivedAt).toISOString().split('T')[0] : '',
+    anomalyWarning: d.anomalyWarning,
   }
 }

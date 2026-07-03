@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Shield, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react'
 import { QRCode } from '../components/qr-code'
 import { getProductById } from '../lib/api'
@@ -8,6 +8,8 @@ import type { Product } from '../types'
 export default function VerifyPage() {
   const { productId } = useParams<{ productId: string }>()
   const [product, setProduct] = useState<Product | undefined>()
+  const navigate = useNavigate()
+
   useEffect(() => {
     if (productId) getProductById(productId).then(setProduct)
   }, [productId])
@@ -15,9 +17,9 @@ export default function VerifyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-batik-50 via-white to-batik-100">
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-batik-600 hover:text-batik-800 mb-6">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-sm text-batik-600 hover:text-batik-800 mb-6 cursor-pointer bg-transparent border-none p-0">
           <ArrowLeft className="w-4 h-4" /> Kembali
-        </Link>
+        </button>
 
         <div className="text-center mb-8">
           <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
@@ -213,20 +215,20 @@ export default function VerifyPage() {
               </div>
             )}
             <div className="text-center pt-2">
-              <Link to="/"
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm text-batik-700 border-2 border-batik-300 hover:bg-batik-50">
-                <ArrowLeft className="w-4 h-4" /> Ke Halaman Utama
-              </Link>
+              <button onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm text-batik-700 border-2 border-batik-300 hover:bg-batik-50 cursor-pointer">
+                <ArrowLeft className="w-4 h-4" /> Kembali
+              </button>
             </div>
           </div>
         )}
 
         {!product && (
           <div className="text-center">
-            <Link to="/"
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-batik-700 to-batik-800">
-              Kembali ke Beranda
-            </Link>
+            <button onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-batik-700 to-batik-800 border-none cursor-pointer">
+              Kembali
+            </button>
           </div>
         )}
 

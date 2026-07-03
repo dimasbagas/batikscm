@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { Shield, Scan, QrCode, ArrowRight, Search } from 'lucide-react'
 
 export default function HomePage() {
   const [tokenId, setTokenId] = useState('')
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   function handleVerify(e: React.FormEvent) {
     e.preventDefault()
@@ -27,8 +29,14 @@ export default function HomePage() {
             <a href="#tentang" className="text-sm text-batik-600 hover:text-batik-800">Tentang</a>
             <a href="#fitur" className="text-sm text-batik-600 hover:text-batik-800">Fitur</a>
             <Link to="/verify/BC-2023-001" className="text-sm text-batik-600 hover:text-batik-800">Verifikasi</Link>
-            <Link to="/login" className="text-sm font-medium text-batik-700 hover:text-batik-900 px-4 py-2 rounded-lg border border-batik-300">Masuk</Link>
-            <Link to="/register" className="text-sm font-medium text-white px-4 py-2 rounded-lg bg-gradient-to-r from-batik-700 to-batik-800 hover:from-batik-800 hover:to-batik-900">Daftar UMKM</Link>
+            {user ? (
+              <Link to="/dashboard" className="text-sm font-medium text-white px-4 py-2 rounded-lg bg-gradient-to-r from-batik-700 to-batik-800 hover:from-batik-800 hover:to-batik-900">Dashboard</Link>
+            ) : (
+              <>
+                <Link to="/login" className="text-sm font-medium text-batik-700 hover:text-batik-900 px-4 py-2 rounded-lg border border-batik-300">Masuk</Link>
+                <Link to="/register" className="text-sm font-medium text-white px-4 py-2 rounded-lg bg-gradient-to-r from-batik-700 to-batik-800 hover:from-batik-800 hover:to-batik-900">Daftar UMKM</Link>
+              </>
+            )}
           </nav>
         </div>
       </header>

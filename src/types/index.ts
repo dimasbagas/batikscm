@@ -38,6 +38,8 @@ export interface Product {
   distributorName?: string
   distributedAt?: string
   distributorTxHash?: string
+  receivedAt?: string
+  anomalyWarning?: string
   recipientId?: string
   recipientName?: string
 }
