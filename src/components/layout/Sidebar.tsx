@@ -23,7 +23,7 @@ export function Sidebar() {
   const { pathname } = useLocation()
   const { user, logout } = useAuth()
   const { account, isConnected, connectWallet, disconnectWallet } = useWeb3()
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = user?.role?.toLowerCase() === 'admin'
   const isUMKM = user?.role?.toLowerCase() === 'umkm'
 
   const filteredNavItems = navItems.filter(item => {
