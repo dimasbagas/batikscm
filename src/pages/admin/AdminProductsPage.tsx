@@ -35,28 +35,42 @@ export default function AdminProductsPage() {
       let onChainTokenId = product.onChainTokenId ? Number(product.onChainTokenId) : null
 
       if (!onChainTokenId) {
-        console.log('Registering product on-chain...')
-        const regTx = await contract.registerProduct(
-          product.productName,
-          product.producerName,
-          product.originLocation,
-          product.metadataHash,
-          product.imageUrl || ''
-        )
-        const regReceipt = await regTx.wait()
+        // Proactively check if this metadata hash is already registered on-chain
+        try {
+          console.log('Checking if metadata hash is already registered...')
+          const existingProduct = await contract.getProductByHash(product.metadataHash)
+          if (existingProduct && (existingProduct.tokenId !== undefined || existingProduct[0] !== undefined)) {
+            onChainTokenId = Number(existingProduct.tokenId ?? existingProduct[0])
+            console.log('Found existing on-chain product with tokenId:', onChainTokenId)
+          }
+        } catch (err) {
+          console.log('Metadata hash not yet registered on-chain.')
+        }
 
-        const regEvent = regReceipt.logs
-          .map((log: any) => {
-            try {
-              return contract.interface.parseLog(log)
-            } catch {
-              return null
-            }
-          })
-          .find((e: any) => e && e.name === 'ProductRegistered')
+        if (!onChainTokenId) {
+          console.log('Registering product on-chain...')
+          const regTx = await contract.registerProduct(
+            product.productName,
+            product.producerName,
+            product.originLocation,
+            product.metadataHash,
+            product.imageUrl || ''
+          )
+          const regReceipt = await regTx.wait()
 
-        if (!regEvent) throw new Error('ProductRegistered event tidak ditemukan di blockchain receipt')
-        onChainTokenId = Number(regEvent.args.tokenId)
+          const regEvent = regReceipt.logs
+            .map((log: any) => {
+              try {
+                return contract.interface.parseLog(log)
+              } catch {
+                return null
+              }
+            })
+            .find((e: any) => e && e.name === 'ProductRegistered')
+
+          if (!regEvent) throw new Error('ProductRegistered event tidak ditemukan di blockchain receipt')
+          onChainTokenId = Number(regEvent.args.tokenId)
+        }
       }
 
       console.log('Minting certificate NFT on-chain...')

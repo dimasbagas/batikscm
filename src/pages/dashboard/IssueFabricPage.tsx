@@ -88,7 +88,7 @@ export default function IssueFabricPage() {
           <div>
             <h3 className="font-semibold text-emerald-950">Registrasi Kain Berhasil</h3>
             <p className="text-emerald-700 text-sm mt-1">
-              Sebanyak {issuedProducts.length} kain mentah untuk <strong>{selectedArtisan?.umkmName || selectedArtisan?.name}</strong> telah dicatat dalam database. Status saat ini: <strong>KAIN MENTAH DISERAHKAN (FABRIC_ISSUED)</strong>.
+              Sebanyak {issuedProducts.length} kain mentah untuk <strong>{selectedArtisan?.name} ({selectedArtisan?.umkmName || 'Sentra'})</strong> telah dicatat dalam database. Status saat ini: <strong>KAIN MENTAH DISERAHKAN (FABRIC_ISSUED)</strong>.
             </p>
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function IssueFabricPage() {
               <div className="my-4 grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <p className="text-batik-450 font-medium print:text-black">Penerima (Pengrajin)</p>
-                  <p className="font-semibold text-batik-900 truncate print:text-black">{selectedArtisan?.umkmName || selectedArtisan?.name}</p>
+                  <p className="font-semibold text-batik-900 truncate print:text-black">{selectedArtisan?.name} ({selectedArtisan?.umkmName || 'Sentra'})</p>
                 </div>
                 <div>
                   <p className="text-batik-450 font-medium print:text-black">Tanggal Penyerahan</p>
@@ -203,7 +203,7 @@ export default function IssueFabricPage() {
               <option value="">-- Pilih Pengrajin --</option>
               {artisans.map(artisan => (
                 <option key={artisan.id} value={artisan.id}>
-                  {artisan.umkmName || artisan.name} ({artisan.city || 'Daerah Belum Diatur'})
+                  {artisan.name} ({artisan.city || 'Daerah Belum Diatur'})
                 </option>
               ))}
             </select>

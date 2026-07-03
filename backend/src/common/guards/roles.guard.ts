@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common'
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Role } from '@prisma/client'
 import { ROLES_KEY } from '../decorators/roles.decorator'
@@ -14,6 +14,22 @@ export class RolesGuard implements CanActivate {
     ])
     if (!requiredRoles) return true
     const { user } = context.switchToHttp().getRequest()
-    return requiredRoles.includes(user?.role)
+    console.log('--- RolesGuard Debug ---')
+    console.log('requiredRoles:', requiredRoles)
+    console.log('user:', user)
+    console.log('user?.role:', user?.role)
+
+    if (!user) {
+      throw new ForbiddenException('Akses ditolak: User tidak terotentikasi di server')
+    }
+
+    const hasRole = user.role && requiredRoles.some(role => role.toLowerCase() === user.role.toLowerCase())
+    console.log('hasRole:', hasRole)
+
+    if (!hasRole) {
+      throw new ForbiddenException(`Akses ditolak: Peran Anda (${user.role || 'Tanpa Peran'}) tidak diizinkan. Peran yang diperlukan: ${requiredRoles.join(', ')}`)
+    }
+
+    return true
   }
 }

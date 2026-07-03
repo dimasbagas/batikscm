@@ -88,7 +88,8 @@ export default function DistributeProductPage() {
       navigate('/dashboard/products')
     } catch (err: any) {
       console.error('Failed to distribute product:', err)
-      alert('Gagal mendistribusikan produk. Silakan coba lagi.')
+      const msg = err.response?.data?.message || 'Gagal mendistribusikan produk. Silakan coba lagi.'
+      alert(msg)
     } finally {
       setLoading(false)
     }

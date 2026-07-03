@@ -21,6 +21,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (stored) {
       try { setUser(JSON.parse(stored)) } catch { localStorage.removeItem('user') }
     }
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user') {
+        if (e.newValue) {
+          try {
+            setUser(JSON.parse(e.newValue))
+          } catch {
+            setUser(null)
+          }
+        } else {
+          setUser(null)
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
