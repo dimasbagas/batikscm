@@ -7,7 +7,7 @@ async function debug() {
       email: 'umkm@batikchain.id',
       password: 'admin123'
     })
-    const token = loginRes.data.accessToken
+    const token = (loginRes.data as any).accessToken
     console.log('Login success. Token:', token.substring(0, 15) + '...')
 
     console.log('Registering product...')
