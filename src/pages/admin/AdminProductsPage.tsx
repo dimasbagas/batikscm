@@ -14,12 +14,30 @@ export default function AdminProductsPage() {
   useEffect(() => { getProducts().then(setProducts) }, [])
 
   async function handleVerifyProduct(productId: string) {
+    let hasMetaMask = true;
     if (!isConnected) {
       const conn = await connectWallet()
       if (!conn) {
-        alert('Hubungkan MetaMask terlebih dahulu untuk memverifikasi produk ke Blockchain.')
-        return
+        hasMetaMask = false;
       }
+    }
+
+    if (!hasMetaMask) {
+      if (!window.confirm('MetaMask tidak terdeteksi. Gunakan Mode Simulasi (Bypass Blockchain)?')) return;
+      setVerifying(productId);
+      try {
+        const dummyTokenId = Math.floor(Math.random() * 1000) + 100;
+        const dummyHash = "0x" + Array(64).fill(0).map(()=>Math.floor(Math.random()*16).toString(16)).join('');
+        await recordCertificate(productId, dummyTokenId, dummyHash);
+        alert('Simulasi Sertifikasi Berhasil! Status telah diperbarui.');
+        const updated = await getProducts();
+        setProducts(updated);
+      } catch (e: any) {
+        alert('Gagal simulasi: ' + e.message);
+      } finally {
+        setVerifying(null);
+      }
+      return;
     }
 
     if (!window.confirm('Apakah Anda yakin ingin memverifikasi produk ini ke Blockchain via MetaMask?')) return
