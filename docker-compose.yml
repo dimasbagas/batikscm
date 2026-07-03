@@ -28,7 +28,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       PORT: "3000"
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       R2_ENDPOINT: ${R2_ENDPOINT:-}
