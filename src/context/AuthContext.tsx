@@ -13,7 +13,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('user')) {
+      try { return JSON.parse(params.get('user') as string) } catch { return null }
+    }
+    const stored = localStorage.getItem('user')
+    if (stored) {
+      try { return JSON.parse(stored) } catch { return null }
+    }
+    return null
+  })
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
