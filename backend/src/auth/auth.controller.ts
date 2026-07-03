@@ -56,7 +56,7 @@ export class AuthController {
     const FRONTEND_URL = process.env.CORS_ORIGIN || 'http://localhost:5173'
     res.cookie('auth_token', result.accessToken, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 15 * 60 * 1000 })
     res.cookie('refresh_token', result.refreshToken, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 })
-    res.redirect(FRONTEND_URL)
+    res.redirect(`${FRONTEND_URL}?auth_token=${result.accessToken}&user=${encodeURIComponent(JSON.stringify(result.user))}`)
   }
 
   @Get('distributors')

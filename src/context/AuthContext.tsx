@@ -17,9 +17,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem('user')
-    if (stored) {
-      try { setUser(JSON.parse(stored)) } catch { localStorage.removeItem('user') }
+    const params = new URLSearchParams(window.location.search)
+    const urlToken = params.get('auth_token')
+    const urlUser = params.get('user')
+
+    if (urlToken && urlUser) {
+      localStorage.setItem('auth_token', urlToken)
+      localStorage.setItem('user', urlUser)
+      try {
+        setUser(JSON.parse(urlUser))
+        window.history.replaceState({}, document.title, window.location.pathname)
+      } catch (e) {
+        console.error('Failed to parse user from URL')
+      }
+    } else {
+      const stored = localStorage.getItem('user')
+      if (stored) {
+        try { setUser(JSON.parse(stored)) } catch { localStorage.removeItem('user') }
+      }
     }
   }, [])
 
