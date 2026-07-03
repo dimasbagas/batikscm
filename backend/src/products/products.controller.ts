@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Req, UseInterceptors, UploadedFile, BadRequestException, MaxFileSizeValidator, ParseFilePipe, FileTypeValidator, Res, NotFoundException } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Req, UseInterceptors, UploadedFile, BadRequestException, MaxFileSizeValidator, ParseFilePipe, FileTypeValidator, Res, NotFoundException, Ip } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger'
 import { AuthGuard } from '@nestjs/passport'

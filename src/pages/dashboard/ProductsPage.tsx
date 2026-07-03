@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Package, ArrowRight, Users, Phone, MapPin, Mail, CheckCircle } from 'lucide-react'
 import { getProducts, getPartnerPengrajin } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
@@ -12,6 +12,7 @@ export default function ProductsPage() {
   const [partnerPengrajins, setPartnerPengrajins] = useState<any[]>([])
   const [printProduct, setPrintProduct] = useState<Product | null>(null)
   const { user } = useAuth()
+  const navigate = useNavigate()
   
   const isDistributor = user?.role?.toLowerCase() === 'distributor'
   const isPengrajin = user?.role?.toLowerCase() === 'pengrajin'
@@ -276,10 +277,10 @@ export default function ProductsPage() {
                        p.status === 'rejected' ? 'Ditolak' : 'Selesai Dibuat'}
                     </span>
                     {isDistributor && p.status === 'registered' && (
-                      <Link to={`/dashboard/products/${p.id}/distribute`}
+                      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/dashboard/products/${p.id}/distribute`); }}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 transition shadow-sm">
                         Proses Distribusi <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      </button>
                     )}
                     {isDistributor && p.status !== 'fabric_issued' && (
                       <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPrintProduct(p); }}
@@ -288,29 +289,27 @@ export default function ProductsPage() {
                       </button>
                     )}
                     {isPengrajin && p.status === 'fabric_issued' && (
-                      <Link to={`/dashboard/products/complete-work?tokenId=${p.tokenId}`}
+                      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/dashboard/products/complete-work?tokenId=${p.tokenId}`); }}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-750 transition shadow-sm">
                         Setor Batik <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      </button>
                     )}
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/verify/${p.tokenId}`); }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-batik-700 bg-white hover:bg-batik-50 transition border border-batik-200 shadow-sm ml-auto">
+                      Lihat Detail <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               );
 
               // Click-through behavior
-              if (p.status === 'fabric_issued' || p.status === 'registered') {
-                return (
-                  <div key={p.id} className="bg-white rounded-xl border border-batik-100 hover:border-batik-300 transition-colors">
-                    {content}
-                  </div>
-                );
-              }
-
               return (
-                <Link key={p.id} to={`/verify/${p.tokenId}`}
-                  className="bg-white rounded-xl border border-batik-100 hover:border-batik-300 transition-colors block">
+                <div 
+                  key={p.id} 
+                  onClick={() => navigate(`/verify/${p.tokenId}`)}
+                  className="bg-white rounded-xl border border-batik-100 hover:border-batik-300 transition-colors block cursor-pointer">
                   {content}
-                </Link>
+                </div>
               );
             })}
           </div>
