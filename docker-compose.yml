@@ -36,7 +36,7 @@ services:
       R2_SECRET_KEY: ${R2_SECRET_KEY:-}
       R2_BUCKET: ${R2_BUCKET:-batikchain}
     volumes:
-      - sqlite_data:/app/prisma
+      - ./backend/prisma:/app/prisma
     ports:
       - "3000:3000"
     healthcheck:
@@ -58,5 +58,3 @@ services:
     ports:
       - "8080:80"
 
-volumes:
-  sqlite_data:
