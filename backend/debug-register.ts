@@ -3,7 +3,7 @@ import axios from 'axios'
 async function debug() {
   try {
     console.log('Logging in...')
-    const loginRes = await axios.post('http://localhost:3000/api/v1/auth/login', {
+    const loginRes = await axios.post<any>('http://localhost:3000/api/v1/auth/login', {
       email: 'umkm@batikchain.id',
       password: 'admin123'
     })

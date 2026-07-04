@@ -20,5 +20,6 @@
     "paths": {
       "@/*": ["src/*"]
     }
-  }
+  },
+  "exclude": ["debug-register.ts"]
 }
